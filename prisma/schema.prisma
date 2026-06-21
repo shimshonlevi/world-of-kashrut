@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id                      String   @id @default(cuid())
+  responsible             String
+  projectName             String
+  importer                String
+  importerPhone           String?
+  importerEmail           String?
+  country                 String
+  startDate               String
+  endDate                 String
+  kosherBody              String
+  supervisor              String
+  supervisorPhone         String?
+  factoryName             String
+  factoryAddress          String
+  status                  String
+  currentStage            String
+  templateId              String?
+  stages                  String   @default("[]")
+  enabledTools            String   @default("[]")
+  reportReceived          Boolean  @default(false)
+  reportPhoto             String?
+  sentToChaim             Boolean  @default(false)
+  sentToKosherBody        Boolean  @default(false)
+  certReceived            Boolean  @default(false)
+  submittedToRabbinate    Boolean  @default(false)
+  submittedForPayment     Boolean  @default(false)
+  paid                    Boolean  @default(false)
+  profitDaily             Int
+  kosherFee               Int
+  submissionFee           Int
+  actualExpenses          Int?
+  quotedPrice             Int?
+  driveLink               String
+  daysDelayed             Int?
+  timeline                String
+  documents               String
+  chatHistory             String
+  flight                  String
+  hotel                   String
+  needsFlightBooking      Boolean  @default(false)
+  clientAwaitingResponse  Boolean  @default(false)
+  productionDetails       String?
+  approvers               String   @default("[]")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([responsible])
+  @@index([status])
+  @@index([currentStage])
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  icon        String   @default("FileText")
+  color       String   @default("bg-slate-50 border-slate-200 text-slate-700")
+  category    String   @default("")
+  stages      String   @default("[]") // JSON: TemplateStage[]
+  tools       String   @default("[]") // JSON: ToolKey[] (enabled optional tools)
+  isDefault   Boolean  @default(false)
+  isArchived  Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isArchived])
+}
+
+model Setting {
+  key       String   @id
+  value     String // JSON
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  role         String   @default("secretary") // admin | secretary
+  avatar       String   @default("")
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Importer {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  contactPerson String?
+  phone         String?
+  email         String?
+  country       String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Supervisor {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  phone        String?
+  email        String?
+  kosherBodies String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  projectId   String
+  action      String
+  fieldName   String?
+  oldValue    String?
+  newValue    String?
+  performedBy String
+  timestamp   DateTime @default(now())
+
+  @@index([projectId])
+  @@index([timestamp])
+}

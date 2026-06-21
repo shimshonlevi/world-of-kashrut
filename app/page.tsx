@@ -1,0 +1,383 @@
+'use client';
+
+import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { calculateStats } from '@/lib/data';
+import { applyCorePatchToStages } from '@/lib/templates';
+import type { Project, FilterState } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { AppLayout } from '@/components/layout/app-layout';
+import { KPICards } from '@/components/dashboard/kpi-cards';
+import { ActionCenter } from '@/components/dashboard/action-center';
+import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton';
+import { AdvancedProjectTable } from '@/components/dashboard/advanced-project-table';
+import { QuickViewDrawer } from '@/components/dashboard/quick-view-drawer';
+import { NewProjectWizard } from '@/components/dashboard/new-project-wizard';
+import { SmartAIAssistant } from '@/components/dashboard/smart-ai-assistant';
+import { NotificationCenter } from '@/components/dashboard/notification-center';
+import { AIChatWidget } from '@/components/ai-chat-widget';
+import { ManagerAnalytics } from '@/components/dashboard/manager-analytics';
+import { LoginScreen } from '@/components/login-screen';
+import { useAuth } from '@/components/auth-provider';
+import { ClientsView } from '@/components/views/clients-view';
+import { ReportsView } from '@/components/views/reports-view';
+import { TripsView } from '@/components/views/trips-view';
+import { ProjectsView } from '@/components/views/projects-view';
+import { TemplatesView } from '@/components/views/templates-view';
+import { SettingsView } from '@/components/views/settings-view';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { LayoutDashboard, BarChart3 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+function DashboardPage() {
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+  const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
+  const [isAIOpen, setIsAIOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState('dashboard');
+
+  // Sync page / wizard from URL params (enables deep links + command palette nav).
+  useEffect(() => {
+    const page = searchParams.get('page');
+    if (page) setCurrentPage(page);
+    if (searchParams.get('new') === '1') setIsNewProjectOpen(true);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    setLoadingProjects(true);
+    fetch('/api/projects')
+      .then((res) => res.json())
+      .then((data) => setProjects(data.projects || []))
+      .catch((error) => {
+        console.error('Failed to load projects', error);
+        toast({ title: 'שגיאה', description: 'לא ניתן לטעון את הפרויקטים', variant: 'destructive' });
+      })
+      .finally(() => setLoadingProjects(false));
+  }, [isAuthenticated, toast]);
+
+  // Get user's projects - secretaries only see their own, admin sees all
+  const userProjects = useMemo(() => {
+    if (!user) return [];
+    if (user.role === 'admin') return projects;
+    return projects.filter((p) => p.responsible === user.name);
+  }, [projects, user]);
+
+  // Calculate stats based on user's projects
+  const stats = useMemo(() => {
+    const baseStats = calculateStats(userProjects);
+    return {
+      ...baseStats,
+      totalProjects: userProjects.filter((p) => p.status !== 'הסתיים').length,
+      completedThisMonth: userProjects.filter((p) => p.status === 'הסתיים').length,
+    };
+  }, [userProjects]);
+
+  // Count total alerts
+  const totalAlerts = useMemo(() => {
+    return stats.urgentTasks + stats.clientsAwaitingResponse;
+  }, [stats]);
+
+  // While restoring the session, avoid flashing the login screen.
+  if (authLoading) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  const handleSelectProject = (project: Project) => {
+    setSelectedProject(project);
+    setIsQuickViewOpen(true);
+  };
+
+  const handleOpenFullCase = (project: Project) => {
+    router.push(`/case/${project.id}`);
+  };
+
+  const handleCreateProject = async (data: any) => {
+    // Template-first: the server instantiates the stages, requirements, enabled
+    // tools and current stage from the chosen template. We just pass core details.
+    const newProject = {
+      responsible: data.responsible || user?.name || 'מנהל',
+      projectName: data.projectName || 'פרויקט חדש',
+      importer: data.importer || '',
+      importerPhone: data.importerPhone || '',
+      importerEmail: data.importerEmail || '',
+      country: data.country || '',
+      startDate: data.startDate || new Date().toISOString().split('T')[0],
+      endDate: data.endDate || new Date().toISOString().split('T')[0],
+      kosherBody: data.kosherBody || '',
+      supervisor: data.supervisor || '',
+      supervisorPhone: data.supervisorPhone || '',
+      factoryName: data.factoryName || '',
+      factoryAddress: '',
+      status: 'בתהליך',
+      currentStage: '',
+      templateId: data.templateId,
+      reportReceived: false,
+      sentToChaim: false,
+      paid: false,
+      profitDaily: 0,
+      kosherFee: 0,
+      submissionFee: 0,
+      quotedPrice: 0,
+      actualExpenses: 0,
+      driveLink: '',
+      timeline: [],
+      documents: [],
+      chatHistory: [],
+      flight: { status: 'not_booked' },
+      hotel: { status: 'not_booked' },
+      needsFlightBooking: false,
+      clientAwaitingResponse: false,
+    };
+
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProject),
+      });
+      if (!res.ok) throw new Error('Failed to create project');
+      const result = await res.json();
+      setProjects((prev) => [result.project, ...prev]);
+      toast({ title: 'נוצר תיק חדש', description: `הפרויקט ${result.project.projectName} נוצר בהצלחה` });
+      router.push(`/case/${result.project.id}`);
+    } catch (error) {
+      console.error(error);
+      toast({ title: 'שגיאה', description: 'לא ניתן ליצור את הפרויקט', variant: 'destructive' });
+    } finally {
+      setIsNewProjectOpen(false);
+    }
+  };
+
+  // Inline-edit a project from the table (status, owner, paid, report…) and persist.
+  // Toggling a bound core flag (paid/reportReceived/sentToChaim) also syncs the
+  // matching stage step, so the workflow stays a single source of truth.
+  const handleUpdateProject = async (id: string, patch: Partial<Project>) => {
+    const target = projects.find((p) => p.id === id);
+    const fullPatch: Partial<Project> = { ...patch };
+    const bindKeys = ['reportReceived', 'sentToChaim', 'sentToKosherBody', 'certReceived', 'submittedToRabbinate', 'submittedForPayment', 'paid'];
+    if (target?.stages && bindKeys.some((k) => k in patch)) {
+      fullPatch.stages = applyCorePatchToStages(target.stages, patch as Record<string, unknown>);
+    }
+    setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...fullPatch } : p))); // optimistic
+    try {
+      const res = await fetch(`/api/projects/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...fullPatch, performedBy: user?.name || 'מערכת' }),
+      });
+      if (!res.ok) throw new Error('update failed');
+      const data = await res.json();
+      setProjects((prev) => prev.map((p) => (p.id === id ? data.project : p)));
+    } catch (error) {
+      console.error(error);
+      toast({ title: 'שגיאה', description: 'העדכון לא נשמר', variant: 'destructive' });
+      // reload to revert the optimistic change
+      fetch('/api/projects')
+        .then((r) => r.json())
+        .then((d) => setProjects(d.projects || []))
+        .catch(() => {});
+    }
+  };
+
+  const handleToggleNotifications = () => {
+    setIsNotificationsOpen(!isNotificationsOpen);
+    if (!isNotificationsOpen) {
+      setIsAIOpen(false);
+    }
+  };
+
+  return (
+    <AppLayout
+      currentPage={currentPage}
+      onPageChange={setCurrentPage}
+      onToggleAI={() => {
+        setIsAIOpen(!isAIOpen);
+        if (!isAIOpen) {
+          setIsNotificationsOpen(false);
+        }
+      }}
+      onNewProject={() => {
+        console.log('[v0] Opening new project wizard');
+        setIsNewProjectOpen(true);
+      }}
+      alertCount={totalAlerts}
+      onToggleNotifications={handleToggleNotifications}
+    >
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Render different content based on current page */}
+        {currentPage === 'dashboard' && (
+          <>
+            {/* Welcome & Tabs */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">
+                  שלום, {user?.name}
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  {stats.urgentTasks > 0
+                    ? `יש לך ${stats.urgentTasks} משימות דחופות היום`
+                    : 'אין משימות דחופות - יום מצוין!'}{' '}
+                  <span className="text-muted-foreground/70">•</span>{' '}
+                  {userProjects.length} תיקים פעילים
+                </p>
+              </div>
+
+              {user?.role === 'admin' && (
+                <Tabs defaultValue="dashboard" className="w-auto">
+                  <TabsList className="bg-card border shadow-sm">
+                    <TabsTrigger
+                      value="dashboard"
+                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      דשבורד
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="analytics"
+                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      ניתוחים
+                      <Badge variant="secondary" className="h-5 text-[10px]">
+                        חדש
+                      </Badge>
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              )}
+            </div>
+
+            {loadingProjects ? (
+              <DashboardSkeleton />
+            ) : (
+            <>
+            {/* KPI Cards */}
+            <KPICards stats={stats} />
+
+            {/* Action Center — the daily worklist across all cases */}
+            <ActionCenter projects={userProjects} onOpenCase={(id) => router.push(`/case/${id}`)} />
+
+            {/* Main Content */}
+            {user?.role === 'admin' ? (
+              <Tabs defaultValue="dashboard">
+                <TabsContent value="dashboard" className="mt-0">
+                  <AdvancedProjectTable
+                    projects={userProjects}
+                    onSelectProject={handleSelectProject}
+                    onOpenFullCase={handleOpenFullCase}
+                    onUpdateProject={handleUpdateProject}
+                    selectedProjectId={selectedProject?.id}
+                  />
+                </TabsContent>
+                <TabsContent value="analytics" className="mt-0">
+                  <ManagerAnalytics projects={projects} />
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <AdvancedProjectTable
+                projects={userProjects}
+                onSelectProject={handleSelectProject}
+                onOpenFullCase={handleOpenFullCase}
+                onUpdateProject={handleUpdateProject}
+                selectedProjectId={selectedProject?.id}
+              />
+            )}
+            </>
+            )}
+          </>
+        )}
+
+        {currentPage === 'projects' && (
+          <ProjectsView
+            projects={userProjects}
+            onSelectProject={handleSelectProject}
+            onOpenFullCase={handleOpenFullCase}
+          />
+        )}
+
+        {currentPage === 'clients' && (
+          <ClientsView projects={userProjects} />
+        )}
+
+        {currentPage === 'trips' && (
+          <TripsView projects={userProjects} />
+        )}
+
+        {currentPage === 'reports' && (
+          <ReportsView projects={userProjects} />
+        )}
+
+        {currentPage === 'analytics' && user?.role === 'admin' && (
+          <ManagerAnalytics projects={projects} />
+        )}
+
+        {currentPage === 'templates' && user?.role === 'admin' && (
+          <TemplatesView />
+        )}
+
+        {currentPage === 'settings' && user?.role === 'admin' && (
+          <SettingsView />
+        )}
+      </div>
+
+      {/* Notification Center */}
+      <NotificationCenter
+        projects={userProjects}
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        onSelectProject={(project) => {
+          handleSelectProject(project);
+          setIsNotificationsOpen(false);
+        }}
+      />
+
+      {/* Smart AI Assistant */}
+      <SmartAIAssistant
+        projects={userProjects}
+        selectedProject={selectedProject}
+        isOpen={isAIOpen}
+        onClose={() => setIsAIOpen(false)}
+      />
+
+      {/* Quick View Drawer */}
+      <QuickViewDrawer
+        project={selectedProject}
+        isOpen={isQuickViewOpen}
+        onClose={() => setIsQuickViewOpen(false)}
+      />
+
+      {/* New Project Wizard */}
+      <NewProjectWizard
+        isOpen={isNewProjectOpen}
+        onClose={() => setIsNewProjectOpen(false)}
+        onCreateProject={handleCreateProject}
+        defaultResponsible={user?.name}
+      />
+
+      {/* AI Chat Widget */}
+      <AIChatWidget />
+    </AppLayout>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardPage />
+    </Suspense>
+  );
+}
