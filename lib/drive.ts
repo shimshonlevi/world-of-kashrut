@@ -16,14 +16,19 @@ let _sa: ServiceAccount | null | undefined;
 function loadServiceAccount(): ServiceAccount | null {
   if (_sa !== undefined) return _sa;
   let result: ServiceAccount | null = null;
+  // Serverless (Vercel): credentials passed as a JSON string env var.
+  const inline = process.env.GOOGLE_CREDENTIALS_JSON;
   const p = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  if (p) {
-    try {
-      const abs = path.isAbsolute(p) ? p : path.join(process.cwd(), p);
-      result = JSON.parse(readFileSync(abs, 'utf8')) as ServiceAccount;
-    } catch (e) {
-      console.error('[drive] failed to load credentials:', (e as Error).message);
+  try {
+    if (inline) {
+      result = JSON.parse(inline) as ServiceAccount;
+    } else if (p) {
+      // Local dev: a file path (or raw JSON, if the var holds JSON).
+      const raw = p.trim().startsWith('{') ? p : readFileSync(path.isAbsolute(p) ? p : path.join(process.cwd(), p), 'utf8');
+      result = JSON.parse(raw) as ServiceAccount;
     }
+  } catch (e) {
+    console.error('[drive] failed to load credentials:', (e as Error).message);
   }
   _sa = result;
   return result;
