@@ -34,7 +34,7 @@ const NAV = [
   { id: 'reports', label: 'דוחות', icon: FileText, path: '/?page=reports' },
   { id: 'templates', label: 'תבניות', icon: Layers, path: '/?page=templates', adminOnly: true },
   { id: 'analytics', label: 'ניתוחים', icon: BarChart3, path: '/?page=analytics', adminOnly: true },
-  { id: 'settings', label: 'ניהול משתמשים', icon: Settings, path: '/?page=settings', adminOnly: true },
+  { id: 'settings', label: 'הגדרות', icon: Settings, path: '/?page=settings', adminOnly: true },
 ];
 
 /**

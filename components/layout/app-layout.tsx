@@ -69,7 +69,7 @@ const navItems = [
   { id: 'reports', label: 'דוחות', icon: FileText, description: 'דוחות ומסמכים' },
   { id: 'templates', label: 'תבניות', icon: Layers, description: 'ניהול תבניות תהליך', adminOnly: true },
   { id: 'analytics', label: 'ניתוחים', icon: BarChart3, description: 'סטטיסטיקות', adminOnly: true },
-  { id: 'settings', label: 'משתמשים', icon: Settings, description: 'ניהול משתמשים והרשאות', adminOnly: true },
+  { id: 'settings', label: 'הגדרות', icon: Settings, description: 'משתמשים, התראות וכלים', adminOnly: true },
 ];
 
 export function AppLayout({

@@ -11,7 +11,7 @@ export function SettingsView() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">הגדרות מערכת</h2>
-        <p className="text-muted-foreground">ניהול משתמשים והתראות</p>
+        <p className="text-muted-foreground">משתמשים, התראות וכלים — כל הגדרות המערכת במקום אחד</p>
       </div>
       <Tabs defaultValue="users">
         <TabsList>
