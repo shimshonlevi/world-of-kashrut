@@ -825,7 +825,7 @@ export default function CasePage() {
             )}
 
             {/* Quick Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button variant="outline" size="sm" className="gap-1.5" onClick={() => exportProjectCsv(project)}>
                 <Download className="h-4 w-4" />
                 <span className="hidden sm:inline">ייצוא לאקסל</span>
