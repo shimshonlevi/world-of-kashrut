@@ -60,6 +60,7 @@ async function main() {
       templateId: project.templateId ?? template.id,
       stages: instantiateStages(template),
       enabledTools: template.enabledTools ?? [],
+      driveLink: '', // demo data: no fake Drive link (real folders are created when Drive is configured)
     }
     const data = serializeProjectForDb(withStages)
     await prisma.project.create({ data: { ...data, id: project.id } })

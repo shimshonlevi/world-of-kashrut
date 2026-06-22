@@ -47,13 +47,34 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }
     }
 
-    // --- Fallback: local storage ---
-    const fileName = `${Date.now().toString(36)}-${safeName}`;
-    const dir = path.join(process.cwd(), 'public', 'uploads', id);
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, fileName), bytes);
+    // --- Vercel Blob (cloud storage — works on serverless) ---
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        const { put } = await import('@vercel/blob');
+        const blob = await put(`${id}/${safeName}`, bytes, {
+          access: 'public',
+          addRandomSuffix: true,
+          contentType: file.type || 'application/octet-stream',
+        });
+        return NextResponse.json({ url: blob.url, name: file.name, storage: 'blob' });
+      } catch (e) {
+        console.error('[documents] blob upload failed', e);
+      }
+    }
 
-    return NextResponse.json({ url: `/uploads/${id}/${fileName}`, name: file.name, storage: 'local' });
+    // --- Local storage (dev only; not writable on serverless) ---
+    try {
+      const fileName = `${Date.now().toString(36)}-${safeName}`;
+      const dir = path.join(process.cwd(), 'public', 'uploads', id);
+      await mkdir(dir, { recursive: true });
+      await writeFile(path.join(dir, fileName), bytes);
+      return NextResponse.json({ url: `/uploads/${id}/${fileName}`, name: file.name, storage: 'local' });
+    } catch {
+      return NextResponse.json(
+        { error: 'אחסון הקבצים אינו מוגדר בענן. הפעל Vercel Blob או חבר Google Drive (Shared Drive).' },
+        { status: 503 }
+      );
+    }
   } catch (err) {
     console.error('[documents] upload error', err);
     return NextResponse.json({ error: 'שגיאה בהעלאת הקובץ' }, { status: 500 });
