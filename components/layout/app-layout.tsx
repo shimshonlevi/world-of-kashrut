@@ -148,7 +148,7 @@ export function AppLayout({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 min-h-0 px-3 space-y-1 overflow-y-auto">
         <p className="px-3 py-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
           תפריט ראשי
         </p>
@@ -259,7 +259,7 @@ export function AppLayout({
   return (
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 flex-col border-l bg-sidebar text-sidebar-foreground">
+      <aside className="hidden lg:flex w-64 flex-col border-l bg-sidebar text-sidebar-foreground h-screen sticky top-0">
         <SidebarContent />
       </aside>
 

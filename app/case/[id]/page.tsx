@@ -453,6 +453,11 @@ export default function CasePage() {
     fd.append('file', file);
     try {
       const res = await fetch(`/api/projects/${project.id}/documents`, { method: 'POST', body: fd });
+      if (res.status === 503) {
+        // Storage not configured yet — friendly "coming soon" instead of a scary error.
+        toast({ title: '📎 העלאת מסמכים — בקרוב', description: 'אחסון הקבצים בהגדרה אחרונה ויופעל בקרוב.' });
+        return;
+      }
       if (!res.ok) throw new Error('upload failed');
       const { url, name } = await res.json();
       updateRequirement(stageId, reqId, { value: url, note: name, status: 'submitted' });

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AppLayout } from '@/components/layout/app-layout';
 import { KPICards } from '@/components/dashboard/kpi-cards';
 import { ActionCenter } from '@/components/dashboard/action-center';
+import { ComingSoon } from '@/components/dashboard/coming-soon';
 import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton';
 import { AdvancedProjectTable } from '@/components/dashboard/advanced-project-table';
 import { QuickViewDrawer } from '@/components/dashboard/quick-view-drawer';
@@ -296,6 +297,9 @@ function DashboardPage() {
                 selectedProjectId={selectedProject?.id}
               />
             )}
+
+            {/* Roadmap showcase — communicates the vision in demos */}
+            <ComingSoon />
             </>
             )}
           </>
