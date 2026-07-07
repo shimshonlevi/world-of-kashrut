@@ -949,6 +949,13 @@ export default function CasePage() {
                       onUpdate={(patch) => updateRequirement(stage.id, req.id, patch)}
                       onUploadDocument={(file) => uploadRequirementDocument(stage.id, req.id, file)}
                       onRequest={() => requestRequirement(req)}
+                      onAnalyzeAI={() =>
+                        toast({
+                          title: '🔍 ניתוח מסמך ב-AI — בקרוב',
+                          description:
+                            'המערכת תקרא את המסמך (OCR), תחלץ תאריכים, אסמכתאות ושמות, ותמלא את שדות הדרישה אוטומטית — עם אישור שלך לפני שמירה.',
+                        })
+                      }
                     />
                   ))}
                 </div>

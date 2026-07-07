@@ -26,6 +26,7 @@ import {
   Loader2,
   Download,
   Send,
+  ScanText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RequirementSource } from '@/lib/types';
@@ -67,10 +68,11 @@ interface RequirementItemProps {
   onUpdate: (patch: Partial<ProjectRequirement>) => void;
   onUploadDocument: (file: File) => Promise<void> | void;
   onRequest?: () => void;
+  onAnalyzeAI?: () => void;
   busy?: boolean;
 }
 
-export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, onRequest, busy }: RequirementItemProps) {
+export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, onRequest, onAnalyzeAI, busy }: RequirementItemProps) {
   const meta = TYPE_META[req.type];
   const Icon = meta.icon;
   const fileRef = useRef<HTMLInputElement>(null);
@@ -186,6 +188,17 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
                   {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin ml-1" /> : <Upload className="h-3.5 w-3.5 ml-1" />}
                   {req.value ? 'החלף קובץ' : 'העלה קובץ'}
                 </Button>
+                {req.value && onAnalyzeAI && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onAnalyzeAI}
+                    className="gap-1 border-primary/30 text-primary hover:bg-primary/5"
+                  >
+                    <ScanText className="h-3.5 w-3.5" />
+                    נתח עם AI
+                  </Button>
+                )}
                 {req.status === 'submitted' && (
                   <>
                     <Button variant="outline" size="sm" className="text-emerald-700" onClick={() => onUpdate({ status: 'approved' })}>
