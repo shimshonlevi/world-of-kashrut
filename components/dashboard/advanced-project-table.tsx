@@ -296,7 +296,80 @@ export function AdvancedProjectTable({
       </CardHeader>
 
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
+        {/* Mobile: card list (avoids horizontal scroll on small screens) */}
+        <div className="md:hidden divide-y divide-border/60">
+          {filteredAndSortedProjects.length === 0 && (
+            <div className="py-12 text-center text-sm text-muted-foreground">לא נמצאו תיקים תואמים</div>
+          )}
+          {filteredAndSortedProjects.map((project) => {
+            const statusConfig = getStatusConfig(project.status);
+            const indicators = getUrgencyIndicators(project);
+            const progress = getProgressWidth(project);
+            const { done, total } = reqCounts(project);
+            const milestones = caseMilestones(project);
+            return (
+              <Link
+                key={project.id}
+                href={`/case/${project.id}`}
+                className="block p-4 active:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm truncate">{project.projectName}</span>
+                      {indicators.slice(0, 2).map((ind, i) => (
+                        <span key={i} className={cn('p-1 rounded shrink-0', ind.bg)}>
+                          <ind.icon className={cn('h-3 w-3', ind.color)} />
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {project.importer} · {project.country}
+                    </p>
+                  </div>
+                  <Badge className={cn('shrink-0 gap-1 border-0', statusConfig.bg, statusConfig.text)}>
+                    <span className={cn('h-1.5 w-1.5 rounded-full', statusConfig.dot)} />
+                    {project.status}
+                  </Badge>
+                </div>
+
+                {/* Progress */}
+                <div className="mt-3 space-y-1">
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>התקדמות</span>
+                    <span className="tabular-nums font-medium text-foreground">
+                      {total > 0 ? `${done}/${total} דרישות` : `${progress}%`}
+                    </span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-l from-emerald-400 to-emerald-500 transition-all duration-500"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Kosher pipeline dots */}
+                <div className="mt-3 flex items-center gap-1.5">
+                  {milestones.map((m) => (
+                    <span
+                      key={String(m.key)}
+                      title={m.label}
+                      className={cn(
+                        'h-2 w-2 rounded-full',
+                        m.done ? 'bg-emerald-500' : 'bg-muted-foreground/25'
+                      )}
+                    />
+                  ))}
+                  <span className="mr-auto text-[11px] text-muted-foreground">{project.responsible}</span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Desktop: full table */}
+        <div className="overflow-x-auto hidden md:block">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30 hover:bg-muted/30">
