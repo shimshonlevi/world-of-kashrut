@@ -10,6 +10,7 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { KPICards } from '@/components/dashboard/kpi-cards';
 import { ActionCenter } from '@/components/dashboard/action-center';
 import { ComingSoon } from '@/components/dashboard/coming-soon';
+import { DashboardHero } from '@/components/dashboard/dashboard-hero';
 import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton';
 import { AdvancedProjectTable } from '@/components/dashboard/advanced-project-table';
 import { QuickViewDrawer } from '@/components/dashboard/quick-view-drawer';
@@ -218,28 +219,19 @@ function DashboardPage() {
       alertCount={totalAlerts}
       onToggleNotifications={handleToggleNotifications}
     >
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6 fade-up">
         {/* Render different content based on current page */}
         {currentPage === 'dashboard' && (
           <>
-            {/* Welcome & Tabs */}
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  שלום, {user?.name}
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  {stats.urgentTasks > 0
-                    ? `יש לך ${stats.urgentTasks} משימות דחופות היום`
-                    : 'אין משימות דחופות - יום מצוין!'}{' '}
-                  <span className="text-muted-foreground/70">•</span>{' '}
-                  {userProjects.length} תיקים פעילים
-                </p>
-              </div>
-
+            {/* Welcome hero & Tabs */}
+            <DashboardHero
+              name={user?.name}
+              activeProjects={userProjects.length}
+              urgentTasks={stats.urgentTasks}
+            >
               {user?.role === 'admin' && (
                 <Tabs defaultValue="dashboard" className="w-auto">
-                  <TabsList className="bg-card border shadow-sm">
+                  <TabsList className="bg-background/70 backdrop-blur border shadow-sm">
                     <TabsTrigger
                       value="dashboard"
                       className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2"
@@ -260,7 +252,7 @@ function DashboardPage() {
                   </TabsList>
                 </Tabs>
               )}
-            </div>
+            </DashboardHero>
 
             {loadingProjects ? (
               <DashboardSkeleton />
