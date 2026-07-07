@@ -150,8 +150,8 @@ export function CaseOverview({ project }: { project: Project }) {
         </Section>
       </div>
 
-      {/* Stages with filled values — the unified workflow record */}
-      <Section icon={ListChecks} title="שלבים ודרישות">
+      {/* Requirement groups with filled values — the unified workflow record */}
+      <Section icon={ListChecks} title="דרישות התיק">
         <div className="space-y-4">
           {stages.length === 0 && <p className="text-sm text-muted-foreground">לא הוגדרו שלבים לתיק זה.</p>}
           {stages.map((s, i) => (

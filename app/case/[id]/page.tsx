@@ -573,7 +573,7 @@ export default function CasePage() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left Sidebar - Internal Navigation */}
-      <aside className="w-16 lg:w-60 border-l bg-card flex flex-col shrink-0">
+      <aside className="w-16 lg:w-60 border-l bg-card flex flex-col shrink-0 h-screen sticky top-0">
         <div className="p-4 border-b">
           <Button variant="ghost" size="sm" className="gap-2 w-full justify-start" asChild>
             <Link href="/">
@@ -605,7 +605,7 @@ export default function CasePage() {
                   <span className="font-semibold tabular-nums">{projectProgress}%</span>
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                  <div className="h-full bg-emerald-500 transition-all" style={{ width: `${projectProgress}%` }} />
+                  <div className="h-full rounded-full bg-gradient-to-l from-emerald-400 to-emerald-500 transition-all duration-500" style={{ width: `${projectProgress}%` }} />
                 </div>
               </div>
             )}
@@ -617,8 +617,8 @@ export default function CasePage() {
             {/* Overview — the case document (default) */}
             <button
               onClick={() => setActiveSection('overview')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors mb-1 ${
-                activeSection === 'overview' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all mb-1 ${
+                activeSection === 'overview' ? 'bg-primary text-primary-foreground shadow-sm font-medium' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
               <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
@@ -633,9 +633,9 @@ export default function CasePage() {
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors mb-1 relative ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all mb-1 relative ${
                   activeSection === item.id
-                    ? 'bg-primary text-primary-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-sm font-medium'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
@@ -782,7 +782,7 @@ export default function CasePage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="border-b bg-card p-4 lg:p-6 shrink-0">
+        <header className="relative border-b bg-card/85 backdrop-blur-md p-4 lg:p-6 shrink-0 sticky top-0 z-20">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-1 flex-wrap">
@@ -864,10 +864,20 @@ export default function CasePage() {
               </Button>
             </div>
           </div>
+
+          {/* Slim overall-progress rail along the header's bottom edge */}
+          {stages.length > 0 && (
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-muted/60">
+              <div
+                className="h-full bg-gradient-to-l from-emerald-400 to-emerald-500 transition-all duration-500"
+                style={{ width: `${projectProgress}%` }}
+              />
+            </div>
+          )}
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">
+        <main className="flex-1 p-4 lg:p-6 overflow-auto fade-up">
           {/* Case document overview */}
           {activeSection === 'overview' && <CaseOverview project={project} />}
 
