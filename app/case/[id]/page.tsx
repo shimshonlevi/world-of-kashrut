@@ -879,7 +879,7 @@ export default function CasePage() {
         {/* Content Area */}
         <main className="flex-1 p-4 lg:p-6 overflow-auto fade-up">
           {/* Case document overview */}
-          {activeSection === 'overview' && <CaseOverview project={project} />}
+          {activeSection === 'overview' && <CaseOverview project={project} onNavigate={setActiveSection} />}
 
           {/* Opening tool — importer & initial details */}
           {activeSection === 'opening' && (

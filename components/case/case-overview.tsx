@@ -2,6 +2,7 @@
 
 import type { Project } from '@/lib/types';
 import { overallProgress, stageProgress } from '@/lib/templates';
+import { caseAttention, type AttentionSection } from '@/lib/attention';
 import { deadlineInfo } from '@/lib/dates';
 import { exportProjectCsv, requirementValueText } from '@/lib/export';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +24,8 @@ import {
   CheckCircle2,
   Clock,
   ExternalLink,
+  AlertTriangle,
+  ChevronLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -53,17 +56,77 @@ function Section({ icon: Icon, title, children }: { icon: React.ComponentType<{ 
   );
 }
 
-export function CaseOverview({ project }: { project: Project }) {
+export function CaseOverview({
+  project,
+  onNavigate,
+}: {
+  project: Project;
+  onNavigate?: (section: AttentionSection) => void;
+}) {
   const stages = project.stages ?? [];
   const progress = overallProgress(stages);
   const deadline = deadlineInfo(project.endDate, project.status);
   const profit = (project.quotedPrice || 0) - (project.actualExpenses || 0);
   const money = (n?: number) => (n != null ? `₪${n.toLocaleString()}` : '—');
+  const attention = caseAttention(project);
+
+  const toneCls: Record<string, string> = {
+    danger: 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100',
+    warning: 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100',
+    info: 'border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100',
+  };
 
   const exportToExcel = () => exportProjectCsv(project);
 
   return (
     <div className="max-w-4xl space-y-5">
+      {/* What needs work now — the first thing you see on entering the case */}
+      {attention.length > 0 ? (
+        <Card className="border-amber-200/70 bg-gradient-to-l from-card to-amber-50/40 elevated">
+          <CardHeader className="pb-2.5">
+            <CardTitle className="text-base flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                <AlertTriangle className="h-4 w-4" />
+              </span>
+              דורש טיפול עכשיו
+              <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700">{attention.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {attention.map((a) => (
+                <button
+                  key={a.id}
+                  onClick={() => onNavigate?.(a.section)}
+                  className={cn(
+                    'group flex items-center gap-2 rounded-lg border px-3 py-2 text-right transition-colors',
+                    toneCls[a.tone]
+                  )}
+                >
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm font-medium truncate">{a.label}</span>
+                    {a.detail && <span className="block text-[11px] opacity-80">{a.detail}</span>}
+                  </span>
+                  <ChevronLeft className="h-4 w-4 shrink-0 opacity-60 group-hover:opacity-100" />
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-emerald-200/70 bg-gradient-to-l from-card to-emerald-50/40">
+          <CardContent className="flex items-center gap-3 py-4">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+              <CheckCircle2 className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-semibold text-sm">התיק מסודר — אין משימות פתוחות</p>
+              <p className="text-xs text-muted-foreground">כל דרישות החובה טופלו ואין התראות פעילות.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header + actions */}
       <div className="flex items-center justify-between gap-3 print:hidden">
         <div>
