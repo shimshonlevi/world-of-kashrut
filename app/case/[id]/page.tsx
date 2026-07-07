@@ -77,7 +77,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { Document, TimelineEvent, Project, ProjectRequirement } from '@/lib/types';
+import { Document, TimelineEvent, Project, ProjectRequirement, Supervisor } from '@/lib/types';
 import { RequirementItem } from '@/components/case/requirement-item';
 import { CaseOverview } from '@/components/case/case-overview';
 import { overallProgress, stageProgress, corePatchFromRequirement } from '@/lib/templates';
@@ -151,6 +151,15 @@ export default function CasePage() {
   const [activeSection, setActiveSection] = useState<ActiveSection>('overview');
   const [newMessage, setNewMessage] = useState('');
   const [chatTab, setChatTab] = useState<ChatTab>('internal');
+
+  // Supervisor roster — powers the assignment picker in the supervision tool.
+  const [roster, setRoster] = useState<Supervisor[]>([]);
+  useEffect(() => {
+    fetch('/api/supervisors')
+      .then((r) => r.json())
+      .then((d) => setRoster(d.supervisors || []))
+      .catch(() => {});
+  }, []);
 
   const [supervisorForm, setSupervisorForm] = useState({
     supervisor: '',
@@ -1300,9 +1309,44 @@ export default function CasePage() {
                       <Label htmlFor="supervisorName">שם המשגיח</Label>
                       <Input
                         id="supervisorName"
+                        list="supervisor-roster"
+                        placeholder="בחר מהרשימה או הקלד שם"
                         value={supervisorForm.supervisor}
-                        onChange={(e) => setSupervisorForm({ ...supervisorForm, supervisor: e.target.value })}
+                        onChange={(e) => {
+                          const name = e.target.value;
+                          const match = roster.find((s) => s.name === name);
+                          setSupervisorForm({
+                            ...supervisorForm,
+                            supervisor: name,
+                            // auto-fill phone when a known supervisor is picked
+                            supervisorPhone: match?.phone || supervisorForm.supervisorPhone,
+                          });
+                        }}
                       />
+                      <datalist id="supervisor-roster">
+                        {roster.map((s) => (
+                          <option key={s.id} value={s.name}>
+                            {[s.regions, s.availability].filter(Boolean).join(' · ')}
+                          </option>
+                        ))}
+                      </datalist>
+                      {(() => {
+                        const match = roster.find((s) => s.name === supervisorForm.supervisor);
+                        if (!match) return null;
+                        return (
+                          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                            {match.active === false && (
+                              <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground">לא זמין לשיבוץ</Badge>
+                            )}
+                            {(match.regions || '').split(',').map((r) => r.trim()).filter(Boolean).slice(0, 3).map((r) => (
+                              <Badge key={r} variant="outline" className="text-[10px] border-primary/30 text-primary">{r}</Badge>
+                            ))}
+                            {match.availability && (
+                              <span className="text-[11px] text-muted-foreground">· {match.availability}</span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="supervisorPhone">טלפון המשגיח</Label>
