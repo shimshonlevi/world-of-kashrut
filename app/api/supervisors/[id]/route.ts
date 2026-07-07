@@ -6,9 +6,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const body = await request.json();
     const data: Record<string, unknown> = {};
-    for (const k of ['name', 'phone', 'email', 'kosherBodies', 'notes']) {
+    for (const k of ['name', 'phone', 'email', 'kosherBodies', 'regions', 'availability', 'notes']) {
       if (body[k] !== undefined) data[k] = body[k] || null;
     }
+    if (body.active !== undefined) data.active = Boolean(body.active);
     const supervisor = await prisma.supervisor.update({ where: { id }, data });
     return NextResponse.json({ supervisor });
   } catch (err) {

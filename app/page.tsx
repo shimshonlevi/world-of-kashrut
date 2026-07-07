@@ -24,6 +24,7 @@ import { useAuth } from '@/components/auth-provider';
 import { ClientsView } from '@/components/views/clients-view';
 import { ReportsView } from '@/components/views/reports-view';
 import { TripsView } from '@/components/views/trips-view';
+import { SupervisorsView } from '@/components/views/supervisors-view';
 import { ProjectsView } from '@/components/views/projects-view';
 import { TemplatesView } from '@/components/views/templates-view';
 import { SettingsView } from '@/components/views/settings-view';
@@ -307,6 +308,10 @@ function DashboardPage() {
 
         {currentPage === 'clients' && (
           <ClientsView projects={userProjects} />
+        )}
+
+        {currentPage === 'supervisors' && (
+          <SupervisorsView projects={userProjects} />
         )}
 
         {currentPage === 'trips' && (

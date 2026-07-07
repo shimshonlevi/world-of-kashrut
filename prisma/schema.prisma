@@ -111,6 +111,9 @@ model Supervisor {
   phone        String?
   email        String?
   kosherBodies String?
+  regions      String? // areas/countries the supervisor is willing to travel to (comma-separated)
+  availability String? // free-text schedule / לו״ז (e.g. "פנוי מ-15/8", "לא זמין באוגוסט")
+  active       Boolean  @default(true) // currently taking assignments
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

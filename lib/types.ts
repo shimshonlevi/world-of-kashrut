@@ -159,6 +159,9 @@ export interface Supervisor {
   phone?: string;
   email?: string;
   kosherBodies?: string; // comma-separated bodies they work with
+  regions?: string; // comma-separated areas/countries willing to travel to
+  availability?: string; // free-text schedule / לו״ז
+  active?: boolean; // currently taking assignments
   notes?: string;
   createdAt?: string;
   updatedAt?: string;

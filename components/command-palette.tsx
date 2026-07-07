@@ -24,12 +24,14 @@ import {
   Building2,
   Plane,
   Settings,
+  ShieldCheck,
 } from 'lucide-react';
 
 const NAV = [
   { id: 'dashboard', label: 'דשבורד', icon: LayoutDashboard, path: '/?page=dashboard' },
   { id: 'projects', label: 'תיקים', icon: FolderKanban, path: '/?page=projects' },
   { id: 'clients', label: 'יבואנים', icon: Users, path: '/?page=clients' },
+  { id: 'supervisors', label: 'משגיחים', icon: ShieldCheck, path: '/?page=supervisors' },
   { id: 'trips', label: 'נסיעות', icon: Plane, path: '/?page=trips' },
   { id: 'reports', label: 'דוחות', icon: FileText, path: '/?page=reports' },
   { id: 'templates', label: 'תבניות', icon: Layers, path: '/?page=templates', adminOnly: true },

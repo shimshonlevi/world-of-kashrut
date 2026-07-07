@@ -85,7 +85,7 @@ async function main() {
     })
   }
 
-  // ---- Supervisors (derived from the mock projects) ----
+  // ---- Supervisors (derived from the mock projects, enriched for demo) ----
   await prisma.supervisor.deleteMany()
   const supMap = new Map<string, { name: string; phone?: string }>()
   for (const p of mockProjects) {
@@ -93,8 +93,24 @@ async function main() {
       supMap.set(p.supervisor, { name: p.supervisor, phone: p.supervisorPhone })
     }
   }
+  // Sample availability / regions / bodies cycled across supervisors so the
+  // demo shows a realistic roster (real data is entered via the UI).
+  const sampleRegions = ['איטליה, מרכז אירופה', 'פולין, מזרח אירופה', 'ארה״ב, קנדה', 'תורכיה, יוון', 'צרפת, ספרד', 'הודו, מזרח אסיה']
+  const sampleAvail = ['פנוי מ-15/8', 'לא זמין בחגים', 'זמין בכל עת', 'עדיף נסיעות קצרות עד שבוע', 'פנוי בסופי שבוע בלבד', 'בחו״ל עד 20/8']
+  const sampleBodies = ['OU, בד״ץ', 'כ״ף, OK', 'בד״ץ העדה', 'OU', 'Star-K, OK', 'רבנות, כ״ף']
+  let si = 0
   for (const s of supMap.values()) {
-    await prisma.supervisor.create({ data: { name: s.name, phone: s.phone ?? null } })
+    await prisma.supervisor.create({
+      data: {
+        name: s.name,
+        phone: s.phone ?? null,
+        regions: sampleRegions[si % sampleRegions.length],
+        availability: sampleAvail[si % sampleAvail.length],
+        kosherBodies: sampleBodies[si % sampleBodies.length],
+        active: si % 5 !== 4, // ~1 in 5 marked unavailable
+      },
+    })
+    si++
   }
 
   console.log(

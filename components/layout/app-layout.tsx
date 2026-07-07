@@ -39,6 +39,7 @@ import {
   AlertTriangle,
   Layers,
   Plane,
+  ShieldCheck,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/components/auth-provider';
@@ -65,6 +66,7 @@ const navItems = [
   { id: 'dashboard', label: 'דשבורד', icon: LayoutDashboard, description: 'סקירה כללית' },
   { id: 'projects', label: 'תיקים', icon: FolderKanban, description: 'ניהול תיקים' },
   { id: 'clients', label: 'יבואנים', icon: Users, description: 'רשימת לקוחות' },
+  { id: 'supervisors', label: 'משגיחים', icon: ShieldCheck, description: 'רשימת משגיחים ולו״ז' },
   { id: 'trips', label: 'נסיעות', icon: Plane, description: 'לוגיסטיקה וטיסות' },
   { id: 'reports', label: 'דוחות', icon: FileText, description: 'דוחות ומסמכים' },
   { id: 'templates', label: 'תבניות', icon: Layers, description: 'ניהול תבניות תהליך', adminOnly: true },

@@ -21,6 +21,9 @@ export async function POST(request: Request) {
         phone: body.phone || null,
         email: body.email || null,
         kosherBodies: body.kosherBodies || null,
+        regions: body.regions || null,
+        availability: body.availability || null,
+        active: body.active === undefined ? true : Boolean(body.active),
         notes: body.notes || null,
       },
     });
