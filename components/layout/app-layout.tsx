@@ -40,6 +40,7 @@ import {
   Layers,
   Plane,
   ShieldCheck,
+  BadgeCheck,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/components/auth-provider';
@@ -68,6 +69,7 @@ const navItems = [
   { id: 'clients', label: 'יבואנים', icon: Users, description: 'רשימת לקוחות' },
   { id: 'supervisors', label: 'משגיחים', icon: ShieldCheck, description: 'רשימת משגיחים ולו״ז' },
   { id: 'trips', label: 'נסיעות', icon: Plane, description: 'לוגיסטיקה וטיסות' },
+  { id: 'approvals', label: 'אישורים', icon: BadgeCheck, description: 'אישורי מסמכים וגורמים' },
   { id: 'reports', label: 'דוחות', icon: FileText, description: 'דוחות ומסמכים' },
   { id: 'templates', label: 'תבניות', icon: Layers, description: 'ניהול תבניות תהליך', adminOnly: true },
   { id: 'analytics', label: 'ניתוחים', icon: BarChart3, description: 'סטטיסטיקות', adminOnly: true },

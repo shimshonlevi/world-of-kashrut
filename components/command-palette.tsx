@@ -25,6 +25,7 @@ import {
   Plane,
   Settings,
   ShieldCheck,
+  BadgeCheck,
 } from 'lucide-react';
 
 const NAV = [
@@ -33,6 +34,7 @@ const NAV = [
   { id: 'clients', label: 'יבואנים', icon: Users, path: '/?page=clients' },
   { id: 'supervisors', label: 'משגיחים', icon: ShieldCheck, path: '/?page=supervisors' },
   { id: 'trips', label: 'נסיעות', icon: Plane, path: '/?page=trips' },
+  { id: 'approvals', label: 'אישורים', icon: BadgeCheck, path: '/?page=approvals' },
   { id: 'reports', label: 'דוחות', icon: FileText, path: '/?page=reports' },
   { id: 'templates', label: 'תבניות', icon: Layers, path: '/?page=templates', adminOnly: true },
   { id: 'analytics', label: 'ניתוחים', icon: BarChart3, path: '/?page=analytics', adminOnly: true },
