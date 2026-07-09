@@ -83,3 +83,16 @@ export function caseAttention(project: Project): AttentionItem[] {
 
   return items.sort((a, b) => TONE_RANK[a.tone] - TONE_RANK[b.tone]);
 }
+
+/** Count of items awaiting review in a case (undecided approvals + submitted docs). */
+export function awaitingReviewCount(project: Project): number {
+  if (project.status === 'הסתיים') return 0;
+  let n = 0;
+  for (const s of project.stages ?? []) {
+    for (const r of s.requirements) {
+      if (r.type === 'approval' && r.status !== 'approved' && r.status !== 'rejected') n++;
+      else if (r.type === 'document' && r.status === 'submitted') n++;
+    }
+  }
+  return n;
+}

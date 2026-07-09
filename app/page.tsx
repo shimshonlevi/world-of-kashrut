@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { calculateStats } from '@/lib/data';
 import { applyCorePatchToStages } from '@/lib/templates';
+import { awaitingReviewCount } from '@/lib/attention';
 import type { Project, FilterState } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { AppLayout } from '@/components/layout/app-layout';
@@ -84,6 +85,12 @@ function DashboardPage() {
       completedThisMonth: userProjects.filter((p) => p.status === 'הסתיים').length,
     };
   }, [userProjects]);
+
+  // Pending approvals across the user's active cases (drives the hero chip).
+  const pendingApprovals = useMemo(
+    () => userProjects.reduce((sum, p) => sum + awaitingReviewCount(p), 0),
+    [userProjects]
+  );
 
   // Count total alerts
   const totalAlerts = useMemo(() => {
@@ -230,6 +237,8 @@ function DashboardPage() {
               name={user?.name}
               activeProjects={userProjects.length}
               urgentTasks={stats.urgentTasks}
+              pendingApprovals={pendingApprovals}
+              onApprovalsClick={() => setCurrentPage('approvals')}
             >
               {user?.role === 'admin' && (
                 <Tabs defaultValue="dashboard" className="w-auto">

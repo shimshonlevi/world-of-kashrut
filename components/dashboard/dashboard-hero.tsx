@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalendarDays, FolderKanban, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { CalendarDays, FolderKanban, AlertTriangle, CheckCircle2, BadgeCheck } from 'lucide-react';
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -29,6 +29,8 @@ interface DashboardHeroProps {
   name?: string;
   activeProjects: number;
   urgentTasks: number;
+  pendingApprovals?: number;
+  onApprovalsClick?: () => void;
   children?: React.ReactNode; // admin tabs slot
 }
 
@@ -36,7 +38,7 @@ interface DashboardHeroProps {
  * Premium branded welcome banner for the dashboard — the first thing managers
  * see. Time-aware greeting, Hebrew date, and at-a-glance status chips.
  */
-export function DashboardHero({ name, activeProjects, urgentTasks, children }: DashboardHeroProps) {
+export function DashboardHero({ name, activeProjects, urgentTasks, pendingApprovals = 0, onApprovalsClick, children }: DashboardHeroProps) {
   // Render date only after mount to avoid SSR/client hydration mismatch.
   const [date, setDate] = useState('');
   useEffect(() => setDate(hebrewDate()), []);
@@ -74,6 +76,15 @@ export function DashboardHero({ name, activeProjects, urgentTasks, children }: D
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 אין משימות דחופות — יום מצוין!
               </span>
+            )}
+            {pendingApprovals > 0 && (
+              <button
+                onClick={onApprovalsClick}
+                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                <BadgeCheck className="h-3.5 w-3.5" />
+                {pendingApprovals} ממתינים לאישור
+              </button>
             )}
           </div>
         </div>
