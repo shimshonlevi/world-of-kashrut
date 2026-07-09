@@ -16,7 +16,6 @@ import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton';
 import { AdvancedProjectTable } from '@/components/dashboard/advanced-project-table';
 import { QuickViewDrawer } from '@/components/dashboard/quick-view-drawer';
 import { NewProjectWizard } from '@/components/dashboard/new-project-wizard';
-import { SmartAIAssistant } from '@/components/dashboard/smart-ai-assistant';
 import { NotificationCenter } from '@/components/dashboard/notification-center';
 import { AIChatWidget } from '@/components/ai-chat-widget';
 import { ManagerAnalytics } from '@/components/dashboard/manager-analytics';
@@ -365,14 +364,6 @@ function DashboardPage() {
         }}
       />
 
-      {/* Smart AI Assistant */}
-      <SmartAIAssistant
-        projects={userProjects}
-        selectedProject={selectedProject}
-        isOpen={isAIOpen}
-        onClose={() => setIsAIOpen(false)}
-      />
-
       {/* Quick View Drawer */}
       <QuickViewDrawer
         project={selectedProject}
@@ -388,8 +379,8 @@ function DashboardPage() {
         defaultResponsible={user?.name}
       />
 
-      {/* AI Chat Widget */}
-      <AIChatWidget />
+      {/* AI Chat Widget — the single AI surface; header AI button controls it */}
+      <AIChatWidget open={isAIOpen} onOpenChange={setIsAIOpen} />
     </AppLayout>
   );
 }

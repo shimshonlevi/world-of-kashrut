@@ -21,6 +21,9 @@ import { cn } from '@/lib/utils';
 
 interface AIChatWidgetProps {
   className?: string;
+  // Optional controlled open state (e.g. from the header "AI" button).
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface ChatMessage {
@@ -36,8 +39,13 @@ const SUGGESTED_QUESTIONS = [
   'סכם את המצב היום',
 ];
 
-export function AIChatWidget({ className }: AIChatWidgetProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function AIChatWidget({ className, open, onOpenChange }: AIChatWidgetProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = open ?? internalOpen;
+  const setIsOpen = (v: boolean) => {
+    setInternalOpen(v);
+    onOpenChange?.(v);
+  };
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
