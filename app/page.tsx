@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { calculateStats } from '@/lib/data';
 import { applyCorePatchToStages } from '@/lib/templates';
-import { awaitingReviewCount } from '@/lib/attention';
+import { myAwaitingReviewCount } from '@/lib/attention';
 import type { Project, FilterState } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { AppLayout } from '@/components/layout/app-layout';
@@ -87,10 +87,10 @@ function DashboardPage() {
     };
   }, [userProjects]);
 
-  // Pending approvals across the user's active cases (drives the hero chip).
+  // Items awaiting THIS user's approval (drives the hero chip → personal inbox).
   const pendingApprovals = useMemo(
-    () => userProjects.reduce((sum, p) => sum + awaitingReviewCount(p), 0),
-    [userProjects]
+    () => projects.reduce((sum, p) => sum + myAwaitingReviewCount(p, user?.name), 0),
+    [projects, user?.name]
   );
 
   // Count total alerts
@@ -330,7 +330,7 @@ function DashboardPage() {
         )}
 
         {currentPage === 'approvals' && (
-          <ApprovalsView projects={userProjects} onUpdate={handleUpdateProject} />
+          <ApprovalsView projects={projects} onUpdate={handleUpdateProject} />
         )}
 
         {currentPage === 'documents' && (

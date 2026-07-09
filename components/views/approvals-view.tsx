@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Project, ProjectRequirement } from '@/lib/types';
 import { corePatchFromRequirement } from '@/lib/templates';
+import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,10 +24,10 @@ interface PendingApproval {
   kind: 'approval' | 'document';
 }
 
-// A requirement is "awaiting review" if it's an approval not yet decided, or a
-// document that was submitted and needs approve/reject.
+// A requirement is "awaiting review" once it's been sent: an approval submitted
+// to someone, or a document submitted for review.
 function isAwaitingReview(r: ProjectRequirement): 'approval' | 'document' | null {
-  if (r.type === 'approval' && r.status !== 'approved' && r.status !== 'rejected') return 'approval';
+  if (r.type === 'approval' && r.status === 'submitted') return 'approval';
   if (r.type === 'document' && r.status === 'submitted') return 'document';
   return null;
 }
@@ -34,8 +35,16 @@ function isAwaitingReview(r: ProjectRequirement): 'approval' | 'document' | null
 export function ApprovalsView({ projects, onUpdate }: ApprovalsViewProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [scope, setScope] = useState<'mine' | 'all'>('mine');
 
-  const pending = useMemo<PendingApproval[]>(() => {
+  // Does this awaiting item belong to the current user?
+  const isMine = (p: PendingApproval) =>
+    p.kind === 'approval'
+      ? p.req.approverName === user?.name
+      : p.project.responsible === user?.name;
+
+  const allPending = useMemo<PendingApproval[]>(() => {
     const out: PendingApproval[] = [];
     for (const project of projects) {
       if (project.status === 'הסתיים') continue;
@@ -48,6 +57,11 @@ export function ApprovalsView({ projects, onUpdate }: ApprovalsViewProps) {
     }
     return out;
   }, [projects]);
+
+  const pending = useMemo(
+    () => (scope === 'mine' ? allPending.filter(isMine) : allPending),
+    [allPending, scope, user?.name] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const byProject = useMemo(() => {
     const map = new Map<string, { project: Project; items: PendingApproval[] }>();
@@ -77,19 +91,29 @@ export function ApprovalsView({ projects, onUpdate }: ApprovalsViewProps) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold">אישורים</h2>
+          <h2 className="text-2xl font-bold">{scope === 'mine' ? 'לאישורי' : 'כל האישורים'}</h2>
           <p className="text-muted-foreground">
             {pending.length > 0
-              ? `${pending.length} פריטים ממתינים לאישורך ב-${byProject.length} תיקים`
-              : 'אין פריטים הממתינים לאישור'}
+              ? `${pending.length} פריטים ממתינים ${scope === 'mine' ? 'לך' : ''} ב-${byProject.length} תיקים`
+              : scope === 'mine' ? 'אין פריטים הממתינים לך' : 'אין פריטים הממתינים לאישור'}
           </p>
         </div>
-        {pending.length > 0 && (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 gap-1.5 px-3 py-1.5">
-            <ShieldCheck className="h-4 w-4" />
-            {pending.length} ממתינים
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-lg border bg-card p-0.5 text-sm">
+            <button
+              onClick={() => setScope('mine')}
+              className={cn('rounded-md px-3 py-1 transition-colors', scope === 'mine' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}
+            >
+              לאישורי {allPending.filter(isMine).length > 0 && `(${allPending.filter(isMine).length})`}
+            </button>
+            <button
+              onClick={() => setScope('all')}
+              className={cn('rounded-md px-3 py-1 transition-colors', scope === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}
+            >
+              הכל ({allPending.length})
+            </button>
+          </div>
+        </div>
       </div>
 
       {pending.length === 0 ? (
@@ -131,7 +155,9 @@ export function ApprovalsView({ projects, onUpdate }: ApprovalsViewProps) {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate">{p.req.label}</p>
                       <p className="text-[11px] text-muted-foreground">
-                        {p.kind === 'document' ? 'מסמך הוגש לבדיקה' : p.req.approverRole ? `מאשר: ${p.req.approverRole}` : 'אישור נדרש'}
+                        {p.kind === 'document'
+                          ? 'מסמך הוגש לבדיקה'
+                          : `אישור${p.req.approverName ? ` · ${p.req.approverName}` : ''}`}
                       </p>
                     </div>
                     {p.kind === 'document' && p.req.value && (

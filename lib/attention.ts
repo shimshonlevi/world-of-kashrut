@@ -73,25 +73,44 @@ export function caseAttention(project: Project): AttentionItem[] {
     }
   }
 
-  // Pending approvals
+  // Approvals that still need action from the office (not yet sent, or rejected).
   if (toolOn(project, 'approvals')) {
-    const pendingApprovals = (project.approvers ?? []).filter((a) => a.status === 'pending');
-    if (pendingApprovals.length > 0) {
-      items.push({ id: 'approvals', label: 'אישורים ממתינים', detail: `${pendingApprovals.length} ממתינים`, tone: 'info', section: 'approvals', count: pendingApprovals.length });
+    let toHandle = 0;
+    for (const s of project.stages ?? []) {
+      for (const r of s.requirements) {
+        if (r.type !== 'approval') continue;
+        if (r.status === 'pending' || r.status === 'rejected') toHandle++; // needs sending / re-handling
+      }
+    }
+    if (toHandle > 0) {
+      items.push({ id: 'approvals', label: 'אישורים לטיפול', detail: `${toHandle} לשליחה`, tone: 'info', section: 'approvals', count: toHandle });
     }
   }
 
   return items.sort((a, b) => TONE_RANK[a.tone] - TONE_RANK[b.tone]);
 }
 
-/** Count of items awaiting review in a case (undecided approvals + submitted docs). */
+/** Items awaiting review in a case: approvals that were sent + documents submitted. */
 export function awaitingReviewCount(project: Project): number {
   if (project.status === 'הסתיים') return 0;
   let n = 0;
   for (const s of project.stages ?? []) {
     for (const r of s.requirements) {
-      if (r.type === 'approval' && r.status !== 'approved' && r.status !== 'rejected') n++;
+      if (r.type === 'approval' && r.status === 'submitted') n++;
       else if (r.type === 'document' && r.status === 'submitted') n++;
+    }
+  }
+  return n;
+}
+
+/** Items awaiting *this user's* review: approvals sent to them + docs on their own cases. */
+export function myAwaitingReviewCount(project: Project, userName?: string): number {
+  if (project.status === 'הסתיים' || !userName) return 0;
+  let n = 0;
+  for (const s of project.stages ?? []) {
+    for (const r of s.requirements) {
+      if (r.type === 'approval' && r.status === 'submitted' && r.approverName === userName) n++;
+      else if (r.type === 'document' && r.status === 'submitted' && project.responsible === userName) n++;
     }
   }
   return n;

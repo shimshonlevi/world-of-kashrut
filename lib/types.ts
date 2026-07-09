@@ -237,6 +237,8 @@ export interface TemplateRequirement {
   acceptedFormats?: string[]; // e.g. ['pdf', 'jpg']
   // For 'approval':
   approverRole?: string; // who needs to approve (free text / role)
+  approverName?: string; // the specific user assigned to approve (set at case time)
+  sentForApprovalAt?: string; // when it was sent to the approver
   // Who provides this item (drives "request from…" actions).
   source?: RequirementSource;
   // Sync: when set, this step mirrors a core boolean field on the project.

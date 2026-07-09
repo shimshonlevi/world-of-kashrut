@@ -82,6 +82,7 @@ import { Document, TimelineEvent, Project, ProjectRequirement, Supervisor } from
 import { RequirementItem } from '@/components/case/requirement-item';
 import { CaseOverview } from '@/components/case/case-overview';
 import { CaseDocuments } from '@/components/case/case-documents';
+import { cn } from '@/lib/utils';
 import { overallProgress, stageProgress, corePatchFromRequirement } from '@/lib/templates';
 import { deadlineInfo } from '@/lib/dates';
 import { exportProjectCsv, downloadCsv } from '@/lib/export';
@@ -161,6 +162,15 @@ export default function CasePage() {
     fetch('/api/supervisors')
       .then((r) => r.json())
       .then((d) => setRoster(d.supervisors || []))
+      .catch(() => {});
+  }, []);
+
+  // Team members — powers the "send for approval" picker in the approvals tool.
+  const [team, setTeam] = useState<{ id: string; name: string; role: string }[]>([]);
+  useEffect(() => {
+    fetch('/api/users/names')
+      .then((r) => r.json())
+      .then((d) => setTeam(d.users || []))
       .catch(() => {});
   }, []);
 
@@ -971,19 +981,92 @@ export default function CasePage() {
             <div className="max-w-3xl space-y-3">
               <div>
                 <h2 className="text-2xl font-bold">אישורים</h2>
-                <p className="text-sm text-muted-foreground mt-1">גורמים מאשרים הנדרשים בתיק.</p>
+                <p className="text-sm text-muted-foreground mt-1">שלח כל אישור לאדם הנכון — הוא יראה אותו בתיבת "לאישורי".</p>
               </div>
               {approvalItems.length === 0 ? (
                 <p className="text-muted-foreground py-8 text-center border rounded-lg border-dashed">אין אישורים מוגדרים בתיק.</p>
               ) : (
-                approvalItems.map(({ stage, req }) => (
-                  <RequirementItem
-                    key={req.id}
-                    requirement={req}
-                    onUpdate={(patch) => updateRequirement(stage.id, req.id, patch)}
-                    onUploadDocument={() => {}}
-                  />
-                ))
+                approvalItems.map(({ stage, req }) => {
+                  const decided = req.status === 'approved' || req.status === 'rejected';
+                  const sent = req.status === 'submitted' && !!req.approverName;
+                  const canDecide = decided || sent
+                    ? user?.name === req.approverName || user?.role === 'admin'
+                    : false;
+                  return (
+                    <Card key={req.id} className={cn(
+                      'border',
+                      req.status === 'approved' ? 'border-emerald-200 bg-emerald-50/40' :
+                      req.status === 'rejected' ? 'border-red-200 bg-red-50/40' : 'border-border/60'
+                    )}>
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className={cn('h-4 w-4', req.status === 'approved' ? 'text-emerald-600' : 'text-muted-foreground')} />
+                            <span className="font-medium text-sm">{req.label}</span>
+                          </div>
+                          <Badge variant="outline" className={cn('text-[10px]',
+                            req.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            req.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                            sent ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-muted text-muted-foreground'
+                          )}>
+                            {req.status === 'approved' ? 'אושר' : req.status === 'rejected' ? 'נדחה' : sent ? `ממתין ל${req.approverName}` : 'טרם נשלח'}
+                          </Badge>
+                        </div>
+
+                        {!decided && (
+                          <div className="flex flex-wrap items-end gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">מאשר{req.approverRole ? ` (${req.approverRole})` : ''}</Label>
+                              <Select
+                                value={req.approverName || ''}
+                                onValueChange={(v) => updateRequirement(stage.id, req.id, { approverName: v })}
+                              >
+                                <SelectTrigger className="h-9 w-48 text-sm"><SelectValue placeholder="בחר איש צוות" /></SelectTrigger>
+                                <SelectContent>
+                                  {team.map((u) => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Button
+                              size="sm"
+                              disabled={!req.approverName}
+                              onClick={() => updateRequirement(stage.id, req.id, { status: 'submitted', sentForApprovalAt: new Date().toISOString() })}
+                              className="gap-1"
+                            >
+                              <Send className="h-3.5 w-3.5" />
+                              {sent ? 'שלח שוב' : 'שלח לאישור'}
+                            </Button>
+                          </div>
+                        )}
+
+                        {sent && canDecide && (
+                          <div className="flex items-center gap-2 pt-1 border-t">
+                            <span className="text-xs text-muted-foreground">האישור מחכה לך:</span>
+                            <Button size="sm" variant="outline" className="h-8 gap-1 text-emerald-700 border-emerald-200" onClick={() => updateRequirement(stage.id, req.id, { status: 'approved' })}>
+                              <Check className="h-3.5 w-3.5" /> אשר
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-8 gap-1 text-destructive border-red-200" onClick={() => updateRequirement(stage.id, req.id, { status: 'rejected' })}>
+                              <X className="h-3.5 w-3.5" /> דחה
+                            </Button>
+                          </div>
+                        )}
+
+                        {decided && (
+                          <div className="flex items-center gap-2 pt-1 border-t">
+                            <span className="text-xs text-muted-foreground">
+                              {req.status === 'approved' ? 'אושר' : 'נדחה'} על ידי {req.approverName || '—'}
+                            </span>
+                            {(user?.role === 'admin' || user?.name === req.approverName) && (
+                              <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => updateRequirement(stage.id, req.id, { status: 'submitted' })}>
+                                בטל החלטה
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
             </div>
           )}
