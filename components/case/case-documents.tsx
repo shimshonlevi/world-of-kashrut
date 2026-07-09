@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { StoredDocument } from '@/lib/types';
+import type { Project, StoredDocument } from '@/lib/types';
 import { DOCUMENT_CATEGORIES } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, FileText, FileImage, Download, Trash2, Files } from 'lucide-react';
+import { DocumentShareMenu } from '@/components/case/document-share-menu';
 import { cn } from '@/lib/utils';
 
 const categoryLabel = (v?: string | null) => DOCUMENT_CATEGORIES.find((c) => c.value === v)?.label || 'אחר';
@@ -27,8 +28,9 @@ const fmtDate = (s?: string) => {
 };
 
 /** All documents uploaded to a case, pulled from the central index. */
-export function CaseDocuments({ projectId, reloadKey }: { projectId: string; reloadKey?: number }) {
+export function CaseDocuments({ project, reloadKey }: { project: Project; reloadKey?: number }) {
   const { toast } = useToast();
+  const projectId = project.id;
   const [docs, setDocs] = useState<StoredDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -93,6 +95,12 @@ export function CaseDocuments({ projectId, reloadKey }: { projectId: string; rel
                 </div>
               </div>
               <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <DocumentShareMenu
+                  doc={d}
+                  importerPhone={project.importerPhone}
+                  importerEmail={project.importerEmail}
+                  supervisorPhone={project.supervisorPhone}
+                />
                 <a href={d.url} download className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground">
                   <Download className="h-4 w-4" />
                 </a>

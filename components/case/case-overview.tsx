@@ -162,11 +162,6 @@ export function CaseOverview({
                 <Clock className="h-3 w-3 ml-1" />{deadline.label}
               </Badge>
             )}
-            {project.driveLink && (
-              <a href={project.driveLink} target="_blank" rel="noreferrer">
-                <Badge variant="outline" className="gap-1 hover:bg-muted cursor-pointer"><ExternalLink className="h-3 w-3" />תיקיית Drive</Badge>
-              </a>
-            )}
           </div>
         </CardContent>
       </Card>

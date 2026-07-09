@@ -3,7 +3,6 @@ import prisma from '@/lib/prisma';
 import { serializeProjectForDb, deserializeProjectFromDb } from '@/lib/project-utils';
 import { instantiateStages } from '@/lib/templates';
 import type { TemplateStage } from '@/lib/types';
-import { isDriveConfigured, createProjectFolder } from '@/lib/drive';
 
 // Validation — only the essentials needed to open a case. The rest (supervisor,
 // factory, kosher body, financials…) are collected later via the case tools.
@@ -85,16 +84,6 @@ export async function POST(request: Request) {
           where: { id: template.id },
           data: { usageCount: { increment: 1 } },
         });
-      }
-    }
-
-    // Auto-create an organized Drive folder for the project (best-effort).
-    if (!body.driveLink && isDriveConfigured()) {
-      try {
-        const folder = await createProjectFolder(`${body.projectName} — ${body.importer}`);
-        if (folder) body.driveLink = folder.link;
-      } catch (e) {
-        console.error('[projects] drive folder creation failed', e);
       }
     }
 

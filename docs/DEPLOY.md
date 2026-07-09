@@ -32,8 +32,7 @@ pnpm db:deploy      # יוצר את כל הטבלאות (db push) + מזריע �
 | `DATABASE_URL` | ה-connection string מ-Neon |
 | `AUTH_SECRET` | מחרוזת אקראית ארוכה (`openssl rand -hex 32`) |
 | `OPENAI_API_KEY` | מפתח OpenAI (לעוזר ה-AI) |
-| `GOOGLE_CREDENTIALS_JSON` | *(אופציונלי)* כל קובץ ה-JSON של חשבון השירות, בשורה אחת |
-| `GOOGLE_DRIVE_FOLDER_ID` | *(אופציונלי)* מזהה תיקיית Drive משותפת |
+| `BLOB_READ_WRITE_TOKEN` | טוקן של Vercel Blob לאחסון קבצי המסמכים |
 
 4. **Deploy**. בסיום מתקבלת כתובת חיה (למשל `world-of-kashrut.vercel.app`).
 

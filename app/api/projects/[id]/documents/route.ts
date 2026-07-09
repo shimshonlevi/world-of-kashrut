@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import prisma from '@/lib/prisma';
-import { isDriveConfigured, createProjectFolder, uploadToFolder, folderIdFromUrl } from '@/lib/drive';
 
 export const runtime = 'nodejs';
 
@@ -21,8 +20,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 }
 
-// Accepts a multipart upload. Prefers Google Drive (into the project's folder);
-// falls back to local /public/uploads storage when Drive isn't available.
+// Accepts a multipart upload. Stores bytes in Vercel Blob (object storage) and
+// records searchable metadata in the Document index. Falls back to local
+// /public/uploads in dev when Blob isn't configured.
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
@@ -67,30 +67,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }
     };
 
-    // --- Try Google Drive first ---
-    if (isDriveConfigured()) {
-      try {
-        const project = await prisma.project.findUnique({ where: { id } });
-        let folderId = folderIdFromUrl(project?.driveLink);
-        if (!folderId && project) {
-          const folder = await createProjectFolder(`${project.projectName} — ${project.importer}`);
-          if (folder) {
-            folderId = folder.id;
-            await prisma.project.update({ where: { id }, data: { driveLink: folder.link } });
-          }
-        }
-        if (folderId) {
-          const uploaded = await uploadToFolder(folderId, safeName, bytes, file.type || 'application/octet-stream');
-          if (uploaded) {
-            const documentId = await indexDocument(uploaded.link, 'drive');
-            return NextResponse.json({ url: uploaded.link, name: file.name, storage: 'drive', documentId });
-          }
-        }
-      } catch (e) {
-        console.error('[documents] drive upload failed, falling back to local', e);
-      }
-    }
-
     // --- Vercel Blob (cloud storage — works on serverless) ---
     if (process.env.BLOB_READ_WRITE_TOKEN) {
       try {
@@ -118,7 +94,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ url, name: file.name, storage: 'local', documentId });
     } catch {
       return NextResponse.json(
-        { error: 'אחסון הקבצים אינו מוגדר בענן. הפעל Vercel Blob או חבר Google Drive (Shared Drive).' },
+        { error: 'אחסון הקבצים אינו מוגדר בענן. הפעל Vercel Blob (הוסף BLOB_READ_WRITE_TOKEN).' },
         { status: 503 }
       );
     }

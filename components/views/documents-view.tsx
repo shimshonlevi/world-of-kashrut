@@ -20,6 +20,7 @@ import {
   ExternalLink,
   Files,
 } from 'lucide-react';
+import { DocumentShareMenu } from '@/components/case/document-share-menu';
 import { cn } from '@/lib/utils';
 
 interface DocumentsViewProps {
@@ -197,6 +198,12 @@ export function DocumentsView({ projects }: DocumentsViewProps) {
                           </div>
                         </div>
                         <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <DocumentShareMenu
+                            doc={d}
+                            importerPhone={proj?.importerPhone}
+                            importerEmail={proj?.importerEmail}
+                            supervisorPhone={proj?.supervisorPhone}
+                          />
                           <a href={d.url} download className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground">
                             <Download className="h-4 w-4" />
                           </a>

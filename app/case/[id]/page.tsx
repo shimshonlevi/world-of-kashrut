@@ -508,14 +508,6 @@ export default function CasePage() {
   const projectProgress = overallProgress(stages);
   const deadline = deadlineInfo(project.endDate, project.status);
 
-  const openOrSetDrive = () => {
-    if (project.driveLink) {
-      window.open(project.driveLink, '_blank', 'noopener');
-      return;
-    }
-    const url = window.prompt('הדבק קישור לתיקיית Drive של התיק:');
-    if (url && url.trim()) void persistProject({ driveLink: url.trim() }, 'קישור Drive נשמר');
-  };
 
   // Save a single core field (used by the Opening tool's inline inputs).
   const saveField = (field: keyof Project, value: string) => {
@@ -853,13 +845,13 @@ export default function CasePage() {
                 <span className="hidden sm:inline">ייצוא לאקסל</span>
               </Button>
               <Button
-                variant={project.driveLink ? 'default' : 'outline'}
+                variant="outline"
                 size="sm"
                 className="gap-1.5"
-                onClick={openOrSetDrive}
+                onClick={() => setActiveSection('documents')}
               >
-                <FolderOpen className="h-4 w-4" />
-                <span className="hidden sm:inline">{project.driveLink ? 'תיקיית Drive' : 'קשר Drive'}</span>
+                <Files className="h-4 w-4" />
+                <span className="hidden sm:inline">מסמכי התיק</span>
               </Button>
               <Button variant="outline" size="sm" className="gap-1.5" asChild>
                 <a href={`https://wa.me/${project.importerPhone?.replace(/\D/g, '')}`} target="_blank" rel="noreferrer noopener">
@@ -972,7 +964,7 @@ export default function CasePage() {
           )}
 
           {/* Documents archive tool — every file uploaded to this case */}
-          {activeSection === 'documents' && <CaseDocuments projectId={project.id} />}
+          {activeSection === 'documents' && <CaseDocuments project={project} />}
 
           {/* Approvals tool */}
           {activeSection === 'approvals' && (

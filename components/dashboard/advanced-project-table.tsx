@@ -605,15 +605,13 @@ export function AdvancedProjectTable({
                               <Mail className="h-4 w-4 ml-2" />
                               שלח אימייל
                             </DropdownMenuItem>
-                            {project.driveLink && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => window.open(project.driveLink, '_blank')}>
-                                  <ExternalLink className="h-4 w-4 ml-2" />
-                                  פתח בדרייב
-                                </DropdownMenuItem>
-                              </>
-                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                              <Link href={`/case/${project.id}`}>
+                                <FileCheck className="h-4 w-4 ml-2" />
+                                מסמכי התיק
+                              </Link>
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
