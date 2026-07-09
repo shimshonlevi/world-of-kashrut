@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 import { fetchTemplates } from '@/lib/templates';
 import { OPTIONAL_TOOL_KEYS, getToolMeta } from '@/lib/tools';
 import type { WorkflowTemplate, Importer, Supervisor } from '@/lib/types';
-import { FileText, ChevronLeft, ChevronRight, Check, ListChecks, Loader2 } from 'lucide-react';
+import { FileText, ChevronLeft, ChevronRight, Check, ListChecks, Loader2, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NewProjectWizardProps {
@@ -32,11 +34,17 @@ const plusDays = (n: number) => {
 const countRequirements = (t: WorkflowTemplate) => t.stages.reduce((s, st) => s + st.requirements.length, 0);
 
 export function NewProjectWizard({ isOpen, onClose, onCreateProject, defaultResponsible }: NewProjectWizardProps) {
+  const { toast } = useToast();
   const [step, setStep] = useState<1 | 2>(1);
   const [templates, setTemplates] = useState<WorkflowTemplate[]>([]);
   const [importers, setImporters] = useState<Importer[]>([]);
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // Inline "new importer" creation — keeps the importers registry in sync when
+  // a case is opened for an importer that doesn't exist yet.
+  const [newImporter, setNewImporter] = useState<Partial<Importer> | null>(null);
+  const [savingImporter, setSavingImporter] = useState(false);
 
   const [templateId, setTemplateId] = useState('');
   const [form, setForm] = useState({
@@ -82,11 +90,62 @@ export function NewProjectWizard({ isOpen, onClose, onCreateProject, defaultResp
     setForm((f) => ({ ...f, supervisor: name, supervisorPhone: match?.phone || f.supervisorPhone }));
   };
 
+  // Is the typed importer already in the registry?
+  const importerIsNew = useMemo(() => {
+    const name = form.importer.trim();
+    return !!name && !importers.some((i) => i.name.trim() === name);
+  }, [form.importer, importers]);
+
+  // Persist a new importer to the registry, then select it.
+  const saveNewImporter = async () => {
+    if (!newImporter?.name?.trim()) return;
+    setSavingImporter(true);
+    try {
+      const res = await fetch('/api/importers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newImporter),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'שמירה נכשלה');
+      setImporters((prev) => [...prev, data.importer]);
+      setForm((f) => ({
+        ...f,
+        importer: data.importer.name,
+        importerPhone: data.importer.phone || f.importerPhone,
+        importerEmail: data.importer.email || f.importerEmail,
+        country: data.importer.country || f.country,
+      }));
+      toast({ title: 'יבואן נוצר', description: `"${data.importer.name}" נוסף לרשומת היבואנים` });
+      setNewImporter(null);
+    } catch (e) {
+      toast({ title: 'שגיאה', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setSavingImporter(false);
+    }
+  };
+
   const canSubmit = templateId && form.projectName.trim() && form.importer.trim();
 
-  const submit = () => {
+  const submit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
+    // Keep the registry in sync: auto-create the importer if it's new (best-effort).
+    if (importerIsNew) {
+      try {
+        const res = await fetch('/api/importers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: form.importer.trim(), phone: form.importerPhone, email: form.importerEmail, country: form.country }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setImporters((prev) => [...prev, data.importer]);
+        }
+      } catch {
+        /* non-blocking — the case is still created */
+      }
+    }
     onCreateProject({ templateId, ...form });
     // parent closes + resets; guard against staying disabled if it doesn't
     setTimeout(() => setSubmitting(false), 1500);
@@ -177,6 +236,16 @@ export function NewProjectWizard({ isOpen, onClose, onCreateProject, defaultResp
               <div className="space-y-1.5">
                 <Label>יבואן *</Label>
                 <Input list="importer-list" value={form.importer} onChange={(e) => onImporterChange(e.target.value)} placeholder="בחר קיים או הקלד חדש" />
+                {importerIsNew && (
+                  <button
+                    type="button"
+                    onClick={() => setNewImporter({ name: form.importer.trim(), phone: form.importerPhone, email: form.importerEmail, country: form.country })}
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    יבואן חדש — צור ברשומת היבואנים
+                  </button>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>טלפון יבואן</Label>
@@ -240,6 +309,52 @@ export function NewProjectWizard({ isOpen, onClose, onCreateProject, defaultResp
           )}
         </DialogFooter>
       </DialogContent>
+
+      {/* Inline new-importer creation (syncs to the importers registry) */}
+      <Dialog open={!!newImporter} onOpenChange={(o) => !o && setNewImporter(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><UserPlus className="h-4 w-4 text-primary" /> יבואן חדש</DialogTitle>
+          </DialogHeader>
+          {newImporter && (
+            <div className="space-y-3 py-1">
+              <div className="space-y-1.5">
+                <Label>שם היבואן *</Label>
+                <Input value={newImporter.name ?? ''} onChange={(e) => setNewImporter({ ...newImporter, name: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>איש קשר</Label>
+                  <Input value={newImporter.contactPerson ?? ''} onChange={(e) => setNewImporter({ ...newImporter, contactPerson: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>מדינה</Label>
+                  <Input value={newImporter.country ?? ''} onChange={(e) => setNewImporter({ ...newImporter, country: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>טלפון</Label>
+                  <Input value={newImporter.phone ?? ''} onChange={(e) => setNewImporter({ ...newImporter, phone: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>אימייל</Label>
+                  <Input value={newImporter.email ?? ''} onChange={(e) => setNewImporter({ ...newImporter, email: e.target.value })} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>הערות</Label>
+                <Textarea rows={2} value={newImporter.notes ?? ''} onChange={(e) => setNewImporter({ ...newImporter, notes: e.target.value })} />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewImporter(null)} disabled={savingImporter}>ביטול</Button>
+            <Button onClick={saveNewImporter} disabled={savingImporter || !newImporter?.name?.trim()} className="gap-2">
+              {savingImporter && <Loader2 className="h-4 w-4 animate-spin" />}
+              שמור ובחר
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
