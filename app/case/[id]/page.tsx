@@ -95,12 +95,11 @@ type ToolSection =
   | 'supervision'
   | 'production'
   | 'requirements'
-  | 'documents'
   | 'approvals'
   | 'chat'
   | 'history';
 type ActiveSection = ToolSection;
-const TOOL_SECTIONS: ToolSection[] = ['overview', 'opening', 'supervision', 'production', 'requirements', 'documents', 'approvals', 'chat', 'history'];
+const TOOL_SECTIONS: ToolSection[] = ['overview', 'opening', 'supervision', 'production', 'requirements', 'approvals', 'chat', 'history'];
 type ChatTab = 'internal' | 'external';
 
 export default function CasePage() {
@@ -153,6 +152,8 @@ export default function CasePage() {
   }, [project]);
 
   const [activeSection, setActiveSection] = useState<ActiveSection>('overview');
+  // Within the unified "מסמכים ודרישות" tool: the checklist vs the files archive.
+  const [docView, setDocView] = useState<'requirements' | 'files'>('requirements');
   const [newMessage, setNewMessage] = useState('');
   const [chatTab, setChatTab] = useState<ChatTab>('internal');
 
@@ -297,7 +298,6 @@ export default function CasePage() {
     { id: 'supervision', icon: Plane, label: 'השגחה וטיסות', optional: 'supervision' },
     { id: 'production', icon: Factory, label: 'פרטי ייצור', optional: 'production' },
     { id: 'requirements', icon: FileText, label: 'מסמכים ודרישות', badge: openDocCount },
-    { id: 'documents', icon: Files, label: 'ארכיון מסמכים' },
     { id: 'approvals', icon: CheckCircle2, label: 'אישורים', optional: 'approvals' },
     { id: 'chat', icon: MessageCircle, label: 'צ׳אט ותקשורת', badge: project.chatHistory.filter((msg) => !msg.isInternal).length },
     { id: 'history', icon: History, label: 'היסטוריית פעולות' },
@@ -858,7 +858,7 @@ export default function CasePage() {
                 variant="outline"
                 size="sm"
                 className="gap-1.5"
-                onClick={() => setActiveSection('documents')}
+                onClick={() => { setActiveSection('requirements'); setDocView('files'); }}
               >
                 <Files className="h-4 w-4" />
                 <span className="hidden sm:inline">מסמכי התיק</span>
@@ -932,21 +932,42 @@ export default function CasePage() {
             </div>
           )}
 
-          {/* Requirements & documents tool — flat checklist (no linear stages) */}
+          {/* Requirements & documents tool — checklist + files archive in one place */}
           {activeSection === 'requirements' && (
             <div className="max-w-3xl space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold">מסמכים ודרישות</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  כל המסמכים, השדות והמשימות שהתיק דורש — מלא, העלה ואשר כאן.
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-bold">מסמכים ודרישות</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {docView === 'requirements'
+                      ? 'כל המסמכים, השדות והמשימות שהתיק דורש — מלא, העלה ואשר כאן.'
+                      : 'כל הקבצים שהועלו לתיק, במקום אחד.'}
+                  </p>
+                </div>
+                <div className="inline-flex rounded-lg border bg-card p-0.5 text-sm shrink-0">
+                  <button
+                    onClick={() => setDocView('requirements')}
+                    className={cn('rounded-md px-3 py-1 transition-colors', docView === 'requirements' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}
+                  >
+                    דרישות
+                  </button>
+                  <button
+                    onClick={() => setDocView('files')}
+                    className={cn('rounded-md px-3 py-1 transition-colors', docView === 'files' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}
+                  >
+                    קבצים
+                  </button>
+                </div>
               </div>
-              {requirementGroups.length === 0 && (
+
+              {docView === 'files' && <CaseDocuments project={project} />}
+
+              {docView === 'requirements' && requirementGroups.length === 0 && (
                 <p className="text-muted-foreground py-8 text-center border rounded-lg border-dashed">
                   לתיק זה לא הוגדרו דרישות (לא נבחרה תבנית).
                 </p>
               )}
-              {requirementGroups.map(({ stage, items }) => (
+              {docView === 'requirements' && requirementGroups.map(({ stage, items }) => (
                 <div key={stage.id} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold">{stage.name}</h3>
@@ -972,9 +993,6 @@ export default function CasePage() {
               ))}
             </div>
           )}
-
-          {/* Documents archive tool — every file uploaded to this case */}
-          {activeSection === 'documents' && <CaseDocuments project={project} />}
 
           {/* Approvals tool */}
           {activeSection === 'approvals' && (
