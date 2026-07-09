@@ -25,6 +25,31 @@ export interface Document {
   fileUrl?: string;
 }
 
+// The central document index row (metadata; bytes live in object storage).
+export interface StoredDocument {
+  id: string;
+  projectId: string;
+  requirementId?: string | null;
+  fileName: string;
+  originalName: string;
+  mimeType?: string | null;
+  size?: number | null;
+  category?: string | null;
+  url: string;
+  storage: string;
+  uploadedBy?: string | null;
+  createdAt: string;
+}
+
+export const DOCUMENT_CATEGORIES: { value: string; label: string }[] = [
+  { value: 'report', label: 'דו״ח משגיח' },
+  { value: 'certificate', label: 'תעודה' },
+  { value: 'invoice', label: 'חשבונית' },
+  { value: 'contract', label: 'חוזה' },
+  { value: 'photo', label: 'תמונה' },
+  { value: 'other', label: 'אחר' },
+];
+
 export interface ChatMessage {
   id: string;
   sender: string;

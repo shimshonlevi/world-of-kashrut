@@ -74,12 +74,14 @@ import {
   Save,
   Factory,
   Pencil,
+  Files,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Document, TimelineEvent, Project, ProjectRequirement, Supervisor } from '@/lib/types';
 import { RequirementItem } from '@/components/case/requirement-item';
 import { CaseOverview } from '@/components/case/case-overview';
+import { CaseDocuments } from '@/components/case/case-documents';
 import { overallProgress, stageProgress, corePatchFromRequirement } from '@/lib/templates';
 import { deadlineInfo } from '@/lib/dates';
 import { exportProjectCsv, downloadCsv } from '@/lib/export';
@@ -92,11 +94,12 @@ type ToolSection =
   | 'supervision'
   | 'production'
   | 'requirements'
+  | 'documents'
   | 'approvals'
   | 'chat'
   | 'history';
 type ActiveSection = ToolSection;
-const TOOL_SECTIONS: ToolSection[] = ['overview', 'opening', 'supervision', 'production', 'requirements', 'approvals', 'chat', 'history'];
+const TOOL_SECTIONS: ToolSection[] = ['overview', 'opening', 'supervision', 'production', 'requirements', 'documents', 'approvals', 'chat', 'history'];
 type ChatTab = 'internal' | 'external';
 
 export default function CasePage() {
@@ -284,6 +287,7 @@ export default function CasePage() {
     { id: 'supervision', icon: Plane, label: 'השגחה וטיסות', optional: 'supervision' },
     { id: 'production', icon: Factory, label: 'פרטי ייצור', optional: 'production' },
     { id: 'requirements', icon: FileText, label: 'מסמכים ודרישות', badge: openDocCount },
+    { id: 'documents', icon: Files, label: 'ארכיון מסמכים' },
     { id: 'approvals', icon: CheckCircle2, label: 'אישורים', optional: 'approvals' },
     { id: 'chat', icon: MessageCircle, label: 'צ׳אט ותקשורת', badge: project.chatHistory.filter((msg) => !msg.isInternal).length },
     { id: 'history', icon: History, label: 'היסטוריית פעולות' },
@@ -460,6 +464,10 @@ export default function CasePage() {
     if (!project) return;
     const fd = new FormData();
     fd.append('file', file);
+    fd.append('requirementId', reqId);
+    fd.append('uploadedBy', user?.name || 'מערכת');
+    // Infer a rough category from the file type (image → photo).
+    fd.append('category', file.type.startsWith('image/') ? 'photo' : 'other');
     try {
       const res = await fetch(`/api/projects/${project.id}/documents`, { method: 'POST', body: fd });
       if (res.status === 503) {
@@ -962,6 +970,9 @@ export default function CasePage() {
               ))}
             </div>
           )}
+
+          {/* Documents archive tool — every file uploaded to this case */}
+          {activeSection === 'documents' && <CaseDocuments projectId={project.id} />}
 
           {/* Approvals tool */}
           {activeSection === 'approvals' && (

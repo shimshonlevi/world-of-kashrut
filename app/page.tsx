@@ -27,6 +27,7 @@ import { ReportsView } from '@/components/views/reports-view';
 import { TripsView } from '@/components/views/trips-view';
 import { SupervisorsView } from '@/components/views/supervisors-view';
 import { ApprovalsView } from '@/components/views/approvals-view';
+import { DocumentsView } from '@/components/views/documents-view';
 import { ProjectsView } from '@/components/views/projects-view';
 import { TemplatesView } from '@/components/views/templates-view';
 import { SettingsView } from '@/components/views/settings-view';
@@ -330,6 +331,10 @@ function DashboardPage() {
 
         {currentPage === 'approvals' && (
           <ApprovalsView projects={userProjects} onUpdate={handleUpdateProject} />
+        )}
+
+        {currentPage === 'documents' && (
+          <DocumentsView projects={userProjects} />
         )}
 
         {currentPage === 'reports' && (

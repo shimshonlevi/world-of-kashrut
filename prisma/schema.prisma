@@ -132,3 +132,24 @@ model AuditLog {
   @@index([projectId])
   @@index([timestamp])
 }
+
+// Central document index. The bytes live in object storage (Vercel Blob);
+// this row holds the searchable metadata + the URL, organized per project.
+model Document {
+  id            String   @id @default(cuid())
+  projectId     String
+  requirementId String? // links back to the requirement it fulfills, if any
+  fileName      String // organized system name
+  originalName  String // as uploaded by the user
+  mimeType      String?
+  size          Int?
+  category      String? // report | certificate | invoice | photo | other
+  url           String
+  storage       String   @default("blob") // blob | drive | local
+  uploadedBy    String?
+  createdAt     DateTime @default(now())
+
+  @@index([projectId])
+  @@index([fileName])
+  @@index([category])
+}
