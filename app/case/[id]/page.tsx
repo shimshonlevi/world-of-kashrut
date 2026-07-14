@@ -82,6 +82,7 @@ import { Document, TimelineEvent, Project, ProjectRequirement, Supervisor } from
 import { RequirementItem } from '@/components/case/requirement-item';
 import { CaseOverview } from '@/components/case/case-overview';
 import { CaseDocuments } from '@/components/case/case-documents';
+import { inferDocumentCategory } from '@/lib/documents';
 import { cn } from '@/lib/utils';
 import { overallProgress, stageProgress, corePatchFromRequirement } from '@/lib/templates';
 import { deadlineInfo } from '@/lib/dates';
@@ -472,12 +473,13 @@ export default function CasePage() {
 
   const uploadRequirementDocument = async (stageId: string, reqId: string, file: File) => {
     if (!project) return;
+    const reqLabel = (project.stages ?? []).flatMap((s) => s.requirements).find((r) => r.id === reqId)?.label;
     const fd = new FormData();
     fd.append('file', file);
     fd.append('requirementId', reqId);
     fd.append('uploadedBy', user?.name || 'מערכת');
-    // Infer a rough category from the file type (image → photo).
-    fd.append('category', file.type.startsWith('image/') ? 'photo' : 'other');
+    // Smart default category from the requirement label + file type (overridable).
+    fd.append('category', inferDocumentCategory(reqLabel, file.type));
     try {
       const res = await fetch(`/api/projects/${project.id}/documents`, { method: 'POST', body: fd });
       if (res.status === 503) {

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Search,
   Loader2,
@@ -95,6 +96,21 @@ export function DocumentsView({ projects }: DocumentsViewProps) {
     }
     return [...map.values()];
   }, [filtered]);
+
+  const updateCategory = async (doc: StoredDocument, category: string) => {
+    setDocs((prev) => prev.map((d) => (d.id === doc.id ? { ...d, category } : d))); // optimistic
+    try {
+      const res = await fetch(`/api/documents/${doc.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category }),
+      });
+      if (!res.ok) throw new Error('failed');
+    } catch {
+      toast({ title: 'שגיאה', description: 'עדכון הקטגוריה נכשל', variant: 'destructive' });
+      load();
+    }
+  };
 
   const remove = async (doc: StoredDocument) => {
     if (!confirm(`למחוק את "${doc.originalName}"?`)) return;
@@ -192,7 +208,12 @@ export function DocumentsView({ projects }: DocumentsViewProps) {
                             {d.originalName}
                           </a>
                           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                            <Badge variant="outline" className="text-[9px] h-4 px-1.5">{categoryLabel(d.category)}</Badge>
+                            <Select value={d.category || 'other'} onValueChange={(v) => updateCategory(d, v)}>
+                              <SelectTrigger className="h-6 w-24 text-[10px] px-2 gap-1"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {DOCUMENT_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
                             {d.size ? <span>{fmtSize(d.size)}</span> : null}
                             <span>· {fmtDate(d.createdAt)}</span>
                           </div>

@@ -1,16 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Project, StoredDocument } from '@/lib/types';
 import { DOCUMENT_CATEGORIES } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, FileText, FileImage, Download, Trash2, Files } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, FileText, FileImage, Download, Trash2, Files, Upload } from 'lucide-react';
 import { DocumentShareMenu } from '@/components/case/document-share-menu';
 import { cn } from '@/lib/utils';
 
-const categoryLabel = (v?: string | null) => DOCUMENT_CATEGORIES.find((c) => c.value === v)?.label || 'אחר';
 const isImage = (mime?: string | null) => !!mime && mime.startsWith('image/');
 const fmtSize = (n?: number | null) => {
   if (!n) return '';
@@ -33,6 +33,9 @@ export function CaseDocuments({ project, reloadKey }: { project: Project; reload
   const projectId = project.id;
   const [docs, setDocs] = useState<StoredDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [uploadCategory, setUploadCategory] = useState('other');
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = () => {
     setLoading(true);
@@ -43,6 +46,46 @@ export function CaseDocuments({ project, reloadKey }: { project: Project; reload
       .finally(() => setLoading(false));
   };
   useEffect(load, [projectId, reloadKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Upload a file directly to the case with the chosen category.
+  const doUpload = async (file: File | undefined) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('category', uploadCategory);
+      fd.append('uploadedBy', ''); // filled server-side context if available
+      const res = await fetch(`/api/projects/${projectId}/documents`, { method: 'POST', body: fd });
+      if (res.status === 503) {
+        toast({ title: '📎 העלאת מסמכים — בקרוב', description: 'אחסון הקבצים בהגדרה אחרונה ויופעל בקרוב.' });
+        return;
+      }
+      if (!res.ok) throw new Error('failed');
+      toast({ title: 'הקובץ הועלה', description: file.name });
+      load();
+    } catch {
+      toast({ title: 'שגיאה', description: 'העלאת הקובץ נכשלה', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const updateCategory = async (doc: StoredDocument, category: string) => {
+    setDocs((prev) => prev.map((d) => (d.id === doc.id ? { ...d, category } : d))); // optimistic
+    try {
+      const res = await fetch(`/api/documents/${doc.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category }),
+      });
+      if (!res.ok) throw new Error('failed');
+    } catch {
+      toast({ title: 'שגיאה', description: 'עדכון הקטגוריה נכשל', variant: 'destructive' });
+      load();
+    }
+  };
 
   const remove = async (doc: StoredDocument) => {
     if (!confirm(`למחוק את "${doc.originalName}"?`)) return;
@@ -59,9 +102,25 @@ export function CaseDocuments({ project, reloadKey }: { project: Project; reload
 
   return (
     <div className="max-w-3xl space-y-4">
-      <div>
-        <h2 className="text-2xl font-bold">מסמכי התיק</h2>
-        <p className="text-sm text-muted-foreground mt-1">כל המסמכים והתמונות שהועלו לתיק זה, במקום אחד.</p>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold">מסמכי התיק</h2>
+          <p className="text-sm text-muted-foreground mt-1">כל המסמכים והתמונות שהועלו לתיק זה, במקום אחד.</p>
+        </div>
+        {/* Upload with a chosen category */}
+        <div className="flex items-center gap-2">
+          <Select value={uploadCategory} onValueChange={setUploadCategory}>
+            <SelectTrigger className="h-9 w-32 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {DOCUMENT_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <input ref={fileRef} type="file" hidden onChange={(e) => doUpload(e.target.files?.[0])} />
+          <Button size="sm" className="gap-1.5" disabled={uploading} onClick={() => fileRef.current?.click()}>
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            העלה קובץ
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -73,7 +132,7 @@ export function CaseDocuments({ project, reloadKey }: { project: Project; reload
         <Card className="border-dashed">
           <CardContent className="py-14 text-center text-muted-foreground">
             <Files className="h-9 w-9 mx-auto mb-3 opacity-40" />
-            עדיין לא הועלו מסמכים לתיק. העלה קבצים דרך "מסמכים ודרישות".
+            עדיין לא הועלו מסמכים לתיק. בחר קטגוריה והעלה קובץ, או העלה דרך "דרישות".
           </CardContent>
         </Card>
       ) : (
@@ -88,7 +147,13 @@ export function CaseDocuments({ project, reloadKey }: { project: Project; reload
                   {d.originalName}
                 </a>
                 <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <Badge variant="outline" className="text-[9px] h-4 px-1.5">{categoryLabel(d.category)}</Badge>
+                  {/* Inline editable category */}
+                  <Select value={d.category || 'other'} onValueChange={(v) => updateCategory(d, v)}>
+                    <SelectTrigger className="h-6 w-24 text-[10px] px-2 gap-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {DOCUMENT_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   {d.size ? <span>{fmtSize(d.size)}</span> : null}
                   <span>· {fmtDate(d.createdAt)}</span>
                   {d.uploadedBy && <span>· {d.uploadedBy}</span>}
