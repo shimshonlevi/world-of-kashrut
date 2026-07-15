@@ -50,6 +50,10 @@ export function CaseDocuments({ project, reloadKey }: { project: Project; reload
   // Upload a file directly to the case with the chosen category.
   const doUpload = async (file: File | undefined) => {
     if (!file) return;
+    if (file.size > 4.4 * 1024 * 1024) {
+      toast({ title: 'הקובץ גדול מדי', description: 'מקסימום 4.5MB כרגע. כווץ את הקובץ או פצל אותו (בקרוב נתמוך בקבצים גדולים).', variant: 'destructive' });
+      return;
+    }
     setUploading(true);
     try {
       const fd = new FormData();

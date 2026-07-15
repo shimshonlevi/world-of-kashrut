@@ -473,6 +473,12 @@ export default function CasePage() {
 
   const uploadRequirementDocument = async (stageId: string, reqId: string, file: File) => {
     if (!project) return;
+    // Vercel serverless functions cap the request body at ~4.5MB. Give a clear
+    // message instead of a generic failure for larger files.
+    if (file.size > 4.4 * 1024 * 1024) {
+      toast({ title: 'הקובץ גדול מדי', description: 'מקסימום 4.5MB כרגע. כווץ את הקובץ או פצל אותו (בקרוב נתמוך בקבצים גדולים).', variant: 'destructive' });
+      return;
+    }
     const reqLabel = (project.stages ?? []).flatMap((s) => s.requirements).find((r) => r.id === reqId)?.label;
     const fd = new FormData();
     fd.append('file', file);
