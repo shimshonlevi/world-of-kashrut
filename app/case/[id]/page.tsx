@@ -1536,6 +1536,59 @@ export default function CasePage() {
             </div>
           )}
 
+          {/* Financial — the last details sub-section */}
+          {activeSection === 'details' && (
+            <div className="max-w-4xl space-y-3 mt-8">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">פיננסי</h3>
+                <Button onClick={handleSaveFinancial} disabled={isSaving} size="sm" variant="outline" className="gap-2">
+                  <Save className="h-4 w-4" />
+                  {isSaving ? 'שומר...' : 'שמור'}
+                </Button>
+              </div>
+              <Card>
+                <CardContent className="p-5 grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>הצעת מחיר</Label>
+                    <Input type="number" value={financialForm.quotePrice} onChange={(e) => setFinancialForm({ ...financialForm, quotePrice: parseFloat(e.target.value) || 0 })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>עלות בפועל</Label>
+                    <Input type="number" value={financialForm.actualCost} onChange={(e) => setFinancialForm({ ...financialForm, actualCost: parseFloat(e.target.value) || 0 })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>מטבע</Label>
+                    <Select value={financialForm.currency} onValueChange={(v) => setFinancialForm({ ...financialForm, currency: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD - דולר</SelectItem>
+                        <SelectItem value="EUR">EUR - יורו</SelectItem>
+                        <SelectItem value="ILS">ILS - שקל</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>סטטוס תשלום</Label>
+                    <Select value={financialForm.paymentStatus} onValueChange={(v) => setFinancialForm({ ...financialForm, paymentStatus: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">חוב פתוח</SelectItem>
+                        <SelectItem value="advance_paid">מקדמה שולמה</SelectItem>
+                        <SelectItem value="paid_full">שולם במלואו</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="md:col-span-4 flex items-center gap-2 pt-1 border-t">
+                    <span className="text-sm text-muted-foreground">רווח:</span>
+                    <span className={cn('text-sm font-bold', financialForm.quotePrice - financialForm.actualCost >= 0 ? 'text-emerald-600' : 'text-destructive')}>
+                      {(financialForm.quotePrice - financialForm.actualCost).toLocaleString()} {financialForm.currency}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Chat View - Dual Panel */}
           {activeSection === 'communication' && (
             <div className="max-w-4xl mb-3 flex items-center justify-between">
