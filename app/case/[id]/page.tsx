@@ -92,15 +92,12 @@ import { FolderOpen, LayoutDashboard } from 'lucide-react';
 // A section is either a tool id or a stage id (stage ids are dynamic).
 type ToolSection =
   | 'overview'
-  | 'opening'
-  | 'supervision'
-  | 'production'
+  | 'details'
   | 'requirements'
   | 'approvals'
-  | 'chat'
-  | 'history';
+  | 'communication';
 type ActiveSection = ToolSection;
-const TOOL_SECTIONS: ToolSection[] = ['overview', 'opening', 'supervision', 'production', 'requirements', 'approvals', 'chat', 'history'];
+const TOOL_SECTIONS: ToolSection[] = ['overview', 'details', 'requirements', 'approvals', 'communication'];
 type ChatTab = 'internal' | 'external';
 
 export default function CasePage() {
@@ -155,6 +152,8 @@ export default function CasePage() {
   const [activeSection, setActiveSection] = useState<ActiveSection>('overview');
   // Within the unified "מסמכים ודרישות" tool: the checklist vs the files archive.
   const [docView, setDocView] = useState<'requirements' | 'files'>('requirements');
+  // Within the unified "תקשורת" tool: the live chat vs the activity log.
+  const [commView, setCommView] = useState<'chat' | 'log'>('chat');
   const [newMessage, setNewMessage] = useState('');
   const [chatTab, setChatTab] = useState<ChatTab>('internal');
 
@@ -295,13 +294,10 @@ export default function CasePage() {
     !project.enabledTools?.length || project.enabledTools.includes(key);
 
   const allToolItems: { id: ToolSection; icon: typeof ListTodo; label: string; badge?: number; optional?: 'supervision' | 'production' | 'approvals' }[] = [
-    { id: 'opening', icon: Building2, label: 'פתיחה ופרטי יבואן' },
-    { id: 'supervision', icon: Plane, label: 'השגחה וטיסות', optional: 'supervision' },
-    { id: 'production', icon: Factory, label: 'פרטי ייצור', optional: 'production' },
+    { id: 'details', icon: Building2, label: 'פרטי התיק' },
     { id: 'requirements', icon: FileText, label: 'מסמכים ודרישות', badge: openDocCount },
     { id: 'approvals', icon: CheckCircle2, label: 'אישורים', optional: 'approvals' },
-    { id: 'chat', icon: MessageCircle, label: 'צ׳אט ותקשורת', badge: project.chatHistory.filter((msg) => !msg.isInternal).length },
-    { id: 'history', icon: History, label: 'היסטוריית פעולות' },
+    { id: 'communication', icon: MessageCircle, label: 'תקשורת', badge: project.chatHistory.filter((msg) => !msg.isInternal).length },
   ];
   const toolItems = allToolItems.filter((t) => !t.optional || toolOn(t.optional));
 
@@ -909,12 +905,14 @@ export default function CasePage() {
           {activeSection === 'overview' && <CaseOverview project={project} onNavigate={setActiveSection} />}
 
           {/* Opening tool — importer & initial details */}
-          {activeSection === 'opening' && (
-            <div className="max-w-2xl space-y-4">
+          {activeSection === 'details' && (
+            <div className="max-w-4xl space-y-4">
               <div>
-                <h2 className="text-2xl font-bold">פתיחה ופרטי יבואן</h2>
-                <p className="text-sm text-muted-foreground mt-1">פרטי היבואן, איש הקשר והמידע הראשוני של התיק.</p>
+                <h2 className="text-2xl font-bold">פרטי התיק</h2>
+                <p className="text-sm text-muted-foreground mt-1">כל נתוני הקבע של התיק במקום אחד — יבואן, כשרות ומשגיח, לוגיסטיקה וייצור.</p>
               </div>
+              <div>
+                <h3 className="text-sm font-semibold mb-2">יבואן ומוצר</h3>
               <Card>
                 <CardContent className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
                   {([
@@ -936,7 +934,8 @@ export default function CasePage() {
                   ))}
                 </CardContent>
               </Card>
-              <p className="text-xs text-muted-foreground">השינויים נשמרים אוטומטית ביציאה מהשדה.</p>
+              <p className="text-xs text-muted-foreground mt-2">השינויים נשמרים אוטומטית ביציאה מהשדה.</p>
+              </div>
             </div>
           )}
 
@@ -1098,19 +1097,13 @@ export default function CasePage() {
           )}
 
           {/* Supervision & flights tool */}
-          {activeSection === 'supervision' && (
-            <div className="max-w-4xl mb-2">
-              <h2 className="text-2xl font-bold">השגחה וטיסות</h2>
-              <p className="text-sm text-muted-foreground mt-1">משגיח, טיסות ומלון — ניהול ההשגחה במקום אחד</p>
-            </div>
-          )}
-          {activeSection === 'supervision' && (
-            <div className="max-w-4xl space-y-6">
+          {activeSection === 'details' && toolOn('supervision') && (
+            <div className="max-w-4xl space-y-6 mt-8">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">לוגיסטיקה וטיסות</h2>
-                <Button onClick={handleSaveLogistics} disabled={isSaving} className="gap-2">
+                <h3 className="text-sm font-semibold">לוגיסטיקה — טיסה ומלון</h3>
+                <Button onClick={handleSaveLogistics} disabled={isSaving} size="sm" variant="outline" className="gap-2">
                   <Save className="h-4 w-4" />
-                  {isSaving ? 'שומ��...' : 'שמור שינויים'}
+                  {isSaving ? 'שומר...' : 'שמור'}
                 </Button>
               </div>
               
@@ -1276,16 +1269,16 @@ export default function CasePage() {
             </div>
           )}
 
-          {activeSection === 'production' && (
-            <div className="max-w-4xl space-y-6">
+          {activeSection === 'details' && toolOn('production') && (
+            <div className="max-w-4xl space-y-6 mt-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">פרטי ייצור</h2>
-                  <p className="text-sm text-muted-foreground">כל המידע הטכני ורלוונטי לשלב הייצור.</p>
+                  <h3 className="text-sm font-semibold">פרטי ייצור</h3>
+                  <p className="text-xs text-muted-foreground">מידע טכני רלוונטי לשלב הייצור.</p>
                 </div>
-                <Button onClick={handleSaveProduction} disabled={isSaving} className="gap-2">
+                <Button onClick={handleSaveProduction} disabled={isSaving} size="sm" variant="outline" className="gap-2">
                   <Save className="h-4 w-4" />
-                  {isSaving ? 'שומר...' : 'שמור שינויים'}
+                  {isSaving ? 'שומר...' : 'שמור'}
                 </Button>
               </div>
 
@@ -1402,16 +1395,16 @@ export default function CasePage() {
             </div>
           )}
 
-          {activeSection === 'supervision' && (
-            <div className="max-w-4xl space-y-6">
+          {activeSection === 'details' && toolOn('supervision') && (
+            <div className="max-w-4xl space-y-6 mt-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">משגיח ודוח</h2>
-                  <p className="text-sm text-muted-foreground">ניהול משגיח, דוח המעקב וסטטוס השליחה הלאה.</p>
+                  <h3 className="text-sm font-semibold">משגיח ודו״ח</h3>
+                  <p className="text-xs text-muted-foreground">שיבוץ המשגיח, דו״ח המעקב וסטטוס השליחה הלאה.</p>
                 </div>
-                <Button onClick={handleSaveSupervisor} disabled={isSaving} className="gap-2">
+                <Button onClick={handleSaveSupervisor} disabled={isSaving} size="sm" variant="outline" className="gap-2">
                   <Save className="h-4 w-4" />
-                  {isSaving ? 'שומר...' : 'שמור שינויים'}
+                  {isSaving ? 'שומר...' : 'שמור'}
                 </Button>
               </div>
 
@@ -1544,11 +1537,20 @@ export default function CasePage() {
           )}
 
           {/* Chat View - Dual Panel */}
-          {activeSection === 'chat' && (
-            <div className="max-w-4xl h-[calc(100vh-220px)] flex flex-col">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold">תקשורת</h2>
+          {activeSection === 'communication' && (
+            <div className="max-w-4xl mb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">תקשורת</h2>
+                <p className="text-sm text-muted-foreground mt-1">{commView === 'chat' ? 'הודעות ותקשורת עם היבואן והצוות.' : 'יומן פעילות מלא — שינויים והודעות לפי סדר כרונולוגי.'}</p>
               </div>
+              <div className="inline-flex rounded-lg border bg-card p-0.5 text-sm shrink-0">
+                <button onClick={() => setCommView('chat')} className={cn('rounded-md px-3 py-1 transition-colors', commView === 'chat' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}>שיחה</button>
+                <button onClick={() => setCommView('log')} className={cn('rounded-md px-3 py-1 transition-colors', commView === 'log' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}>יומן פעילות</button>
+              </div>
+            </div>
+          )}
+          {activeSection === 'communication' && commView === 'chat' && (
+            <div className="max-w-4xl h-[calc(100vh-260px)] flex flex-col">
 
               {/* Quick contacts */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -1705,7 +1707,7 @@ export default function CasePage() {
           )}
 
           {/* History View - Audit Log */}
-          {activeSection === 'history' && (() => {
+          {activeSection === 'communication' && commView === 'log' && (() => {
             // Merge audit changes + communication into one chronological feed.
             const epochOfMsg = (m: { id: string; timestamp: string }) => {
               const fromId = /^m-(\d+)/.exec(m.id)?.[1];

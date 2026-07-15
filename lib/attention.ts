@@ -8,11 +8,10 @@ import { isRequirementSatisfied } from './templates';
 export type AttentionTone = 'danger' | 'warning' | 'info';
 export type AttentionSection =
   | 'overview'
-  | 'supervision'
-  | 'production'
+  | 'details'
   | 'requirements'
   | 'approvals'
-  | 'chat';
+  | 'communication';
 
 export interface AttentionItem {
   id: string;
@@ -45,7 +44,7 @@ export function caseAttention(project: Project): AttentionItem[] {
 
   // Client waiting
   if (project.clientAwaitingResponse) {
-    items.push({ id: 'client', label: 'יבואן ממתין למענה', tone: 'warning', section: 'chat' });
+    items.push({ id: 'client', label: 'יבואן ממתין למענה', tone: 'warning', section: 'communication' });
   }
 
   // Pending required requirements
@@ -63,13 +62,13 @@ export function caseAttention(project: Project): AttentionItem[] {
   // Supervision / report / logistics
   if (toolOn(project, 'supervision')) {
     if (!project.reportReceived) {
-      items.push({ id: 'report', label: 'דו״ח משגיח טרם התקבל', tone: 'warning', section: 'supervision' });
+      items.push({ id: 'report', label: 'דו״ח משגיח טרם התקבל', tone: 'warning', section: 'details' });
     }
     if (project.flight?.status === 'not_booked' || project.needsFlightBooking) {
-      items.push({ id: 'flight', label: 'טיסה טרם הוזמנה', tone: 'warning', section: 'supervision' });
+      items.push({ id: 'flight', label: 'טיסה טרם הוזמנה', tone: 'warning', section: 'details' });
     }
     if (project.hotel?.status === 'not_booked') {
-      items.push({ id: 'hotel', label: 'מלון טרם הוזמן', tone: 'info', section: 'supervision' });
+      items.push({ id: 'hotel', label: 'מלון טרם הוזמן', tone: 'info', section: 'details' });
     }
   }
 
