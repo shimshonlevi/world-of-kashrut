@@ -154,6 +154,8 @@ export default function CasePage() {
   const [docView, setDocView] = useState<'requirements' | 'files'>('requirements');
   // Within the unified "תקשורת" tool: the live chat vs the activity log.
   const [commView, setCommView] = useState<'chat' | 'log'>('chat');
+  // Within "פרטי התיק": one sub-section at a time (pills) — no endless scrolling.
+  const [detailsView, setDetailsView] = useState<'importer' | 'supervisor' | 'logistics' | 'production' | 'financial'>('importer');
   const [newMessage, setNewMessage] = useState('');
   const [chatTab, setChatTab] = useState<ChatTab>('internal');
 
@@ -867,6 +869,15 @@ export default function CasePage() {
                 <Files className="h-4 w-4" />
                 <span className="hidden sm:inline">מסמכי התיק</span>
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => { setActiveSection('communication'); setCommView('log'); }}
+              >
+                <History className="h-4 w-4" />
+                <span className="hidden sm:inline">יומן פעילות</span>
+              </Button>
               <Button variant="outline" size="sm" className="gap-1.5" asChild>
                 <a href={`https://wa.me/${project.importerPhone?.replace(/\D/g, '')}`} target="_blank" rel="noreferrer noopener">
                   <MessageSquare className="h-4 w-4 text-emerald-600" />
@@ -905,14 +916,41 @@ export default function CasePage() {
           {activeSection === 'overview' && <CaseOverview project={project} onNavigate={setActiveSection} />}
 
           {/* Opening tool — importer & initial details */}
+          {/* פרטי התיק — header + sub-section pills (one section at a time) */}
           {activeSection === 'details' && (
+            <div className="max-w-4xl mb-5">
+              <h2 className="text-2xl font-bold">פרטי התיק</h2>
+              <p className="text-sm text-muted-foreground mt-1">כל נתוני הקבע של התיק — בחר מקטע.</p>
+              <div className="mt-4 flex flex-wrap items-center gap-1.5 border-b pb-3">
+                {([
+                  { id: 'importer', label: 'יבואן ומוצר', on: true },
+                  { id: 'supervisor', label: 'משגיח ודו״ח', on: toolOn('supervision') },
+                  { id: 'logistics', label: 'לוגיסטיקה', on: toolOn('supervision') },
+                  { id: 'production', label: 'ייצור', on: toolOn('production') },
+                  { id: 'financial', label: 'פיננסי', on: true },
+                ] as const)
+                  .filter((t) => t.on)
+                  .map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setDetailsView(t.id as typeof detailsView)}
+                      className={cn(
+                        'rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors',
+                        detailsView === t.id
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'details' && detailsView === 'importer' && (
             <div className="max-w-4xl space-y-4">
               <div>
-                <h2 className="text-2xl font-bold">פרטי התיק</h2>
-                <p className="text-sm text-muted-foreground mt-1">כל נתוני הקבע של התיק במקום אחד — יבואן, כשרות ומשגיח, לוגיסטיקה וייצור.</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold mb-2">יבואן ומוצר</h3>
               <Card>
                 <CardContent className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
                   {([
@@ -1097,8 +1135,8 @@ export default function CasePage() {
           )}
 
           {/* Supervision & flights tool */}
-          {activeSection === 'details' && toolOn('supervision') && (
-            <div className="max-w-4xl space-y-6 mt-8">
+          {activeSection === 'details' && detailsView === 'logistics' && toolOn('supervision') && (
+            <div className="max-w-4xl space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">לוגיסטיקה — טיסה ומלון</h3>
                 <Button onClick={handleSaveLogistics} disabled={isSaving} size="sm" variant="outline" className="gap-2">
@@ -1269,8 +1307,8 @@ export default function CasePage() {
             </div>
           )}
 
-          {activeSection === 'details' && toolOn('production') && (
-            <div className="max-w-4xl space-y-6 mt-8">
+          {activeSection === 'details' && detailsView === 'production' && toolOn('production') && (
+            <div className="max-w-4xl space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold">פרטי ייצור</h3>
@@ -1395,8 +1433,8 @@ export default function CasePage() {
             </div>
           )}
 
-          {activeSection === 'details' && toolOn('supervision') && (
-            <div className="max-w-4xl space-y-6 mt-8">
+          {activeSection === 'details' && detailsView === 'supervisor' && toolOn('supervision') && (
+            <div className="max-w-4xl space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold">משגיח ודו״ח</h3>
@@ -1536,9 +1574,9 @@ export default function CasePage() {
             </div>
           )}
 
-          {/* Financial — the last details sub-section */}
-          {activeSection === 'details' && (
-            <div className="max-w-4xl space-y-3 mt-8">
+          {/* Financial — a details sub-section */}
+          {activeSection === 'details' && detailsView === 'financial' && (
+            <div className="max-w-4xl space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">פיננסי</h3>
                 <Button onClick={handleSaveFinancial} disabled={isSaving} size="sm" variant="outline" className="gap-2">
