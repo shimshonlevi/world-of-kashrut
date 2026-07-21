@@ -75,6 +75,7 @@ import {
   Factory,
   Pencil,
   Files,
+  Layers,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -84,7 +85,7 @@ import { CaseOverview } from '@/components/case/case-overview';
 import { CaseDocuments } from '@/components/case/case-documents';
 import { inferDocumentCategory } from '@/lib/documents';
 import { cn } from '@/lib/utils';
-import { overallProgress, stageProgress, corePatchFromRequirement } from '@/lib/templates';
+import { overallProgress, stageProgress, corePatchFromRequirement, isRequirementSatisfied } from '@/lib/templates';
 import { deadlineInfo } from '@/lib/dates';
 import { exportProjectCsv, downloadCsv } from '@/lib/export';
 import { FolderOpen, LayoutDashboard } from 'lucide-react';
@@ -154,6 +155,9 @@ export default function CasePage() {
   const [docView, setDocView] = useState<'requirements' | 'files'>('requirements');
   // Within the unified "תקשורת" tool: the live chat vs the activity log.
   const [commView, setCommView] = useState<'chat' | 'log'>('chat');
+  // The work tool: group the checklist by who we need it from, or by the
+  // template's requirement groups (which shows where each item is defined).
+  const [reqGroupBy, setReqGroupBy] = useState<'source' | 'stage'>('source');
   // Within "פרטי התיק": one sub-section at a time (pills) — no endless scrolling.
   const [detailsView, setDetailsView] = useState<'importer' | 'supervisor' | 'production' | 'financial'>('importer');
   const [newMessage, setNewMessage] = useState('');
@@ -591,6 +595,23 @@ export default function CasePage() {
   const requirementGroups = stages
     .map((s) => ({ stage: s, items: s.requirements.filter((r) => r.type !== 'approval') }))
     .filter((g) => g.items.length > 0);
+
+  // Same items grouped by WHO we need it from — how the office actually works
+  // ("what do I need from the supervisor today?").
+  const SOURCE_GROUPS = [
+    { key: 'supervisor', label: 'מהמשגיח', hint: 'דו״חות, תמונות ואישורים מהמשגיח בשטח' },
+    { key: 'importer', label: 'מהיבואן', hint: 'מסמכים ופרטים שהיבואן צריך לספק' },
+    { key: 'factory', label: 'מהמפעל', hint: 'נתונים ואישורים מהמפעל' },
+    { key: 'office', label: 'במשרד', hint: 'משימות שאנחנו מבצעים' },
+  ] as const;
+  const requirementsBySource = SOURCE_GROUPS.map((g) => ({
+    ...g,
+    items: stages.flatMap((s) =>
+      s.requirements
+        .filter((r) => r.type !== 'approval' && (r.source ?? 'office') === g.key)
+        .map((r) => ({ stage: s, req: r }))
+    ),
+  })).filter((g) => g.items.length > 0);
   const approvalItems = stages.flatMap((s) =>
     s.requirements.filter((r) => r.type === 'approval').map((r) => ({ stage: s, req: r }))
   );
@@ -1041,12 +1062,60 @@ export default function CasePage() {
 
               {docView === 'files' && <CaseDocuments project={project} />}
 
+              {/* Group-by switch: by who we need it from, or by template group */}
+              {docView === 'requirements' && requirementGroups.length > 0 && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">קבץ לפי:</span>
+                  <button
+                    onClick={() => setReqGroupBy('source')}
+                    className={cn('rounded-full border px-2.5 py-1 transition-colors', reqGroupBy === 'source' ? 'border-primary bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:border-primary/40')}
+                  >
+                    ממי מבקשים
+                  </button>
+                  <button
+                    onClick={() => setReqGroupBy('stage')}
+                    className={cn('rounded-full border px-2.5 py-1 transition-colors', reqGroupBy === 'stage' ? 'border-primary bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:border-primary/40')}
+                  >
+                    שלב בתהליך
+                  </button>
+                </div>
+              )}
+
               {docView === 'requirements' && requirementGroups.length === 0 && (
                 <p className="text-muted-foreground py-8 text-center border rounded-lg border-dashed">
                   לתיק זה לא הוגדרו דרישות (לא נבחרה תבנית).
                 </p>
               )}
-              {docView === 'requirements' && requirementGroups.map(({ stage, items }) => (
+
+              {/* Grouped by who provides it — the daily working view */}
+              {docView === 'requirements' && reqGroupBy === 'source' && requirementsBySource.map((group) => {
+                const done = group.items.filter(({ req }) => isRequirementSatisfied(req)).length;
+                return (
+                  <div key={group.key} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-semibold">{group.label}</h3>
+                        <p className="text-[11px] text-muted-foreground">{group.hint}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground tabular-nums shrink-0">{done}/{group.items.length}</span>
+                    </div>
+                    {group.items.map(({ stage, req }) => (
+                      <RequirementItem
+                        key={req.id}
+                        requirement={req}
+                        originLabel={stage.name}
+                        onUpdate={(patch) => updateRequirement(stage.id, req.id, patch)}
+                        onUploadDocument={(file) => uploadRequirementDocument(stage.id, req.id, file)}
+                        onRequest={() => requestRequirement(req)}
+                        onAnalyzeAI={() => toast({ title: '🔍 ניתוח מסמך ב-AI — בקרוב', description: 'המערכת תקרא את המסמך (OCR), תחלץ תאריכים ואסמכתאות, ותמלא את השדות — עם אישור שלך לפני שמירה.' })}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+
+              {/* Grouped by the template's requirement groups — shows where each item is defined */}
+              {docView === 'requirements' && reqGroupBy === 'stage' && requirementGroups.map(({ stage, items }) => (
                 <div key={stage.id} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold">{stage.name}</h3>
@@ -1059,17 +1128,25 @@ export default function CasePage() {
                       onUpdate={(patch) => updateRequirement(stage.id, req.id, patch)}
                       onUploadDocument={(file) => uploadRequirementDocument(stage.id, req.id, file)}
                       onRequest={() => requestRequirement(req)}
-                      onAnalyzeAI={() =>
-                        toast({
-                          title: '🔍 ניתוח מסמך ב-AI — בקרוב',
-                          description:
-                            'המערכת תקרא את המסמך (OCR), תחלץ תאריכים, אסמכתאות ושמות, ותמלא את שדות הדרישה אוטומטית — עם אישור שלך לפני שמירה.',
-                        })
-                      }
+                      onAnalyzeAI={() => toast({ title: '🔍 ניתוח מסמך ב-AI — בקרוב', description: 'המערכת תקרא את המסמך (OCR), תחלץ תאריכים ואסמכתאות, ותמלא את השדות — עם אישור שלך לפני שמירה.' })}
                     />
                   ))}
                 </div>
               ))}
+
+              {/* Where these requirements come from */}
+              {docView === 'requirements' && requirementGroups.length > 0 && project.templateId && (
+                <div className="flex items-center gap-2 pt-2 border-t text-[11px] text-muted-foreground">
+                  <Layers className="h-3.5 w-3.5" />
+                  הדרישות מוגדרות בתבנית של התיק.
+                  {user?.role === 'admin' && (
+                    <Link href="/?page=templates" className="text-primary hover:underline">
+                      פתח את עורך התבניות
+                    </Link>
+                  )}
+                  <span>· שינוי בתבנית משפיע על תיקים חדשים בלבד.</span>
+                </div>
+              )}
             </div>
           )}
 

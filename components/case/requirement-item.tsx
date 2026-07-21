@@ -69,10 +69,12 @@ interface RequirementItemProps {
   onUploadDocument: (file: File) => Promise<void> | void;
   onRequest?: () => void;
   onAnalyzeAI?: () => void;
+  /** Where this requirement is defined (its template group) — shown for traceability. */
+  originLabel?: string;
   busy?: boolean;
 }
 
-export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, onRequest, onAnalyzeAI, busy }: RequirementItemProps) {
+export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, onRequest, onAnalyzeAI, originLabel, busy }: RequirementItemProps) {
   const meta = TYPE_META[req.type];
   const Icon = meta.icon;
   const fileRef = useRef<HTMLInputElement>(null);
@@ -102,28 +104,25 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
   return (
     <div
       className={cn(
-        'rounded-lg border p-3 transition-colors',
-        satisfied ? 'border-emerald-200 bg-emerald-50/40' : req.status === 'rejected' ? 'border-red-200 bg-red-50/40' : 'bg-card'
+        'rounded-lg border px-3 py-2.5 transition-colors',
+        satisfied ? 'border-emerald-200 bg-emerald-50/40' : req.status === 'rejected' ? 'border-red-200 bg-red-50/40' : 'bg-card hover:border-primary/30'
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2.5">
         <span
           className={cn(
-            'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
+            'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full',
             satisfied ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'
           )}
         >
-          {satisfied ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+          {satisfied ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
         </span>
 
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="font-medium text-sm">{req.label || meta.label}</span>
             {req.required && <span className="text-destructive text-xs">*</span>}
             <StatusBadge status={req.status} />
-            {req.source && req.source !== 'office' && (
-              <span className="text-[10px] text-muted-foreground">· מאת {SOURCE_LABEL[req.source]}</span>
-            )}
             {onRequest && req.source && req.source !== 'office' && !satisfied && (
               <button
                 onClick={onRequest}
@@ -133,6 +132,12 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
                 בקש מ{SOURCE_LABEL[req.source]}
               </button>
             )}
+          </div>
+          {/* Provenance: type · who provides it · which template group defines it */}
+          <div className="flex flex-wrap items-center gap-x-1.5 text-[10px] text-muted-foreground">
+            <span>{meta.label}</span>
+            {req.source && req.source !== 'office' && <span>· מאת {SOURCE_LABEL[req.source]}</span>}
+            {originLabel && <span>· משלב "{originLabel}"</span>}
           </div>
           {req.description && <p className="text-xs text-muted-foreground">{req.description}</p>}
 
