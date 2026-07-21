@@ -155,7 +155,7 @@ export default function CasePage() {
   // Within the unified "תקשורת" tool: the live chat vs the activity log.
   const [commView, setCommView] = useState<'chat' | 'log'>('chat');
   // Within "פרטי התיק": one sub-section at a time (pills) — no endless scrolling.
-  const [detailsView, setDetailsView] = useState<'importer' | 'supervisor' | 'logistics' | 'production' | 'financial'>('importer');
+  const [detailsView, setDetailsView] = useState<'importer' | 'supervisor' | 'production' | 'financial'>('importer');
   const [newMessage, setNewMessage] = useState('');
   const [chatTab, setChatTab] = useState<ChatTab>('internal');
 
@@ -923,11 +923,10 @@ export default function CasePage() {
               <p className="text-sm text-muted-foreground mt-1">כל נתוני הקבע של התיק — בחר מקטע.</p>
               <div className="mt-4 flex flex-wrap items-center gap-1.5 border-b pb-3">
                 {([
-                  { id: 'importer', label: 'יבואן ומוצר', on: true },
-                  { id: 'supervisor', label: 'משגיח ודו״ח', on: toolOn('supervision') },
-                  { id: 'logistics', label: 'לוגיסטיקה', on: toolOn('supervision') },
+                  { id: 'importer', label: 'יבואן', on: true },
+                  { id: 'supervisor', label: 'משגיח ולוגיסטיקה', on: toolOn('supervision') },
                   { id: 'production', label: 'ייצור', on: toolOn('production') },
-                  { id: 'financial', label: 'פיננסי', on: true },
+                  { id: 'financial', label: 'עלויות', on: true },
                 ] as const)
                   .filter((t) => t.on)
                   .map((t) => (
@@ -950,30 +949,65 @@ export default function CasePage() {
 
           {activeSection === 'details' && detailsView === 'importer' && (
             <div className="max-w-4xl space-y-4">
-              <div>
+              {/* Master data — read-only here; the importers screen is the source of truth. */}
               <Card>
-                <CardContent className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {([
-                    ['importer', 'שם יבואן'],
-                    ['importerPhone', 'טלפון יבואן'],
-                    ['importerEmail', 'אימייל יבואן'],
-                    ['country', 'מדינה'],
-                    ['kosherBody', 'גוף כשרות'],
-                    ['factoryName', 'שם המפעל'],
-                    ['factoryAddress', 'כתובת / איש קשר במפעל'],
-                  ] as [keyof Project, string][]).map(([field, label]) => (
-                    <div key={field} className="space-y-1.5">
-                      <Label>{label}</Label>
-                      <Input
-                        defaultValue={String(project[field] ?? '')}
-                        onBlur={(e) => saveField(field, e.target.value)}
-                      />
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary font-semibold text-lg">
+                        {project.importer?.charAt(0) || '—'}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{project.importer || '—'}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {[project.country, project.kosherBody].filter(Boolean).join(' · ') || '—'}
+                        </p>
+                      </div>
                     </div>
-                  ))}
+                    <Button variant="outline" size="sm" className="gap-1.5 shrink-0" asChild>
+                      <Link href={`/?page=clients&q=${encodeURIComponent(project.importer || '')}`}>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        ערוך במסך היבואנים
+                      </Link>
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t">
+                    {([
+                      ['טלפון', project.importerPhone],
+                      ['אימייל', project.importerEmail],
+                      ['מפעל', project.factoryName],
+                      ['כתובת / איש קשר במפעל', project.factoryAddress],
+                    ] as [string, string | undefined][]).map(([label, value]) => (
+                      <div key={label} className="min-w-0">
+                        <p className="text-[11px] text-muted-foreground">{label}</p>
+                        <p className="text-sm truncate">{value || '—'}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-3 border-t">
+                    <Button variant="outline" size="sm" className="gap-1.5" disabled={!project.importerPhone} asChild>
+                      <a href={`https://wa.me/${project.importerPhone?.replace(/\D/g, '')}`} target="_blank" rel="noreferrer noopener">
+                        <MessageSquare className="h-4 w-4 text-emerald-600" /> WhatsApp
+                      </a>
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-1.5" disabled={!project.importerPhone} asChild>
+                      <a href={`tel:${project.importerPhone}`}>
+                        <Phone className="h-4 w-4 text-blue-600" /> טלפון
+                      </a>
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-1.5" disabled={!project.importerEmail} asChild>
+                      <a href={`mailto:${project.importerEmail}`}>
+                        <Mail className="h-4 w-4 text-amber-600" /> אימייל
+                      </a>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
-              <p className="text-xs text-muted-foreground mt-2">השינויים נשמרים אוטומטית ביציאה מהשדה.</p>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                פרטי היבואן מנוהלים במסך "יבואנים" — כאן הם לקריאה בלבד כדי למנוע כפילות.
+              </p>
             </div>
           )}
 
@@ -1135,7 +1169,92 @@ export default function CasePage() {
           )}
 
           {/* Supervision & flights tool */}
-          {activeSection === 'details' && detailsView === 'logistics' && toolOn('supervision') && (
+          {activeSection === 'details' && detailsView === 'supervisor' && toolOn('supervision') && (
+            <div className="max-w-4xl space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold">שיבוץ משגיח</h3>
+                  <p className="text-xs text-muted-foreground">בחירת המשגיח לפי זמינות, אזורים וגוף כשרות.</p>
+                </div>
+                <Button onClick={handleSaveSupervisor} disabled={isSaving} size="sm" variant="outline" className="gap-2">
+                  <Save className="h-4 w-4" />
+                  {isSaving ? 'שומר...' : 'שמור'}
+                </Button>
+              </div>
+              <Card>
+                <CardContent className="p-5 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="supervisorName">שם המשגיח</Label>
+                    <Input
+                      id="supervisorName"
+                      list="supervisor-roster"
+                      placeholder="בחר מהרשימה או הקלד שם"
+                      value={supervisorForm.supervisor}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        const match = roster.find((s) => s.name === name);
+                        setSupervisorForm({
+                          ...supervisorForm,
+                          supervisor: name,
+                          supervisorPhone: match?.phone || supervisorForm.supervisorPhone,
+                        });
+                      }}
+                    />
+                    <datalist id="supervisor-roster">
+                      {roster.map((s) => (
+                        <option key={s.id} value={s.name}>
+                          {[s.regions, s.availability].filter(Boolean).join(' · ')}
+                        </option>
+                      ))}
+                    </datalist>
+                    {(() => {
+                      const match = roster.find((s) => s.name === supervisorForm.supervisor);
+                      if (!match) return null;
+                      return (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                          {match.active === false && (
+                            <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground">לא זמין לשיבוץ</Badge>
+                          )}
+                          {(match.regions || '').split(',').map((r) => r.trim()).filter(Boolean).slice(0, 3).map((r) => (
+                            <Badge key={r} variant="outline" className="text-[10px] border-primary/30 text-primary">{r}</Badge>
+                          ))}
+                          {match.availability && (
+                            <span className="text-[11px] text-muted-foreground">· {match.availability}</span>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                    <div className="space-y-2">
+                      <Label htmlFor="supervisorPhone">טלפון המשגיח</Label>
+                      <Input
+                        id="supervisorPhone"
+                        value={supervisorForm.supervisorPhone}
+                        onChange={(e) => setSupervisorForm({ ...supervisorForm, supervisorPhone: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`https://wa.me/${supervisorForm.supervisorPhone?.replace(/\D/g, '')}`} target="_blank" rel="noreferrer noopener">
+                          <MessageSquare className="h-4 w-4 text-emerald-600" />
+                          WhatsApp
+                        </a>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`tel:${supervisorForm.supervisorPhone}`}>
+                          <Phone className="h-4 w-4 text-blue-600" />
+                          טלפון
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeSection === 'details' && detailsView === 'supervisor' && toolOn('supervision') && (
             <div className="max-w-4xl space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">לוגיסטיקה — טיסה ומלון</h3>
@@ -1427,147 +1546,6 @@ export default function CasePage() {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">ערך מוערך לפי כמות הייצור. ניתן להחליף לחיבור ישיר לדוח עלויות במחלקת הכלכלה.</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
-
-          {activeSection === 'details' && detailsView === 'supervisor' && toolOn('supervision') && (
-            <div className="max-w-4xl space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold">משגיח ודו״ח</h3>
-                  <p className="text-xs text-muted-foreground">שיבוץ המשגיח, דו״ח המעקב וסטטוס השליחה הלאה.</p>
-                </div>
-                <Button onClick={handleSaveSupervisor} disabled={isSaving} size="sm" variant="outline" className="gap-2">
-                  <Save className="h-4 w-4" />
-                  {isSaving ? 'שומר...' : 'שמור'}
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      פרטי משגיח
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="supervisorName">שם המשגיח</Label>
-                      <Input
-                        id="supervisorName"
-                        list="supervisor-roster"
-                        placeholder="בחר מהרשימה או הקלד שם"
-                        value={supervisorForm.supervisor}
-                        onChange={(e) => {
-                          const name = e.target.value;
-                          const match = roster.find((s) => s.name === name);
-                          setSupervisorForm({
-                            ...supervisorForm,
-                            supervisor: name,
-                            // auto-fill phone when a known supervisor is picked
-                            supervisorPhone: match?.phone || supervisorForm.supervisorPhone,
-                          });
-                        }}
-                      />
-                      <datalist id="supervisor-roster">
-                        {roster.map((s) => (
-                          <option key={s.id} value={s.name}>
-                            {[s.regions, s.availability].filter(Boolean).join(' · ')}
-                          </option>
-                        ))}
-                      </datalist>
-                      {(() => {
-                        const match = roster.find((s) => s.name === supervisorForm.supervisor);
-                        if (!match) return null;
-                        return (
-                          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                            {match.active === false && (
-                              <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground">לא זמין לשיבוץ</Badge>
-                            )}
-                            {(match.regions || '').split(',').map((r) => r.trim()).filter(Boolean).slice(0, 3).map((r) => (
-                              <Badge key={r} variant="outline" className="text-[10px] border-primary/30 text-primary">{r}</Badge>
-                            ))}
-                            {match.availability && (
-                              <span className="text-[11px] text-muted-foreground">· {match.availability}</span>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="supervisorPhone">טלפון המשגיח</Label>
-                      <Input
-                        id="supervisorPhone"
-                        value={supervisorForm.supervisorPhone}
-                        onChange={(e) => setSupervisorForm({ ...supervisorForm, supervisorPhone: e.target.value })}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={`https://wa.me/${supervisorForm.supervisorPhone?.replace(/\D/g, '')}`} target="_blank" rel="noreferrer noopener">
-                          <MessageSquare className="h-4 w-4 text-emerald-600" />
-                          WhatsApp
-                        </a>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={`tel:${supervisorForm.supervisorPhone}`}>
-                          <Phone className="h-4 w-4 text-blue-600" />
-                          טלפון
-                        </a>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      סטטוס דוח
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-medium">דוח התקבל</p>
-                        <p className="text-xs text-muted-foreground">{supervisorForm.reportReceived ? 'כן' : 'לא'}</p>
-                      </div>
-                      <Button size="sm" variant={supervisorForm.reportReceived ? 'outline' : 'secondary'} onClick={() => setSupervisorForm({ ...supervisorForm, reportReceived: !supervisorForm.reportReceived })}>
-                        {supervisorForm.reportReceived ? 'בטל' : 'סמן כהתקבל'}
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="reportPhoto">קישור לדוח / תמונה</Label>
-                      <Input
-                        id="reportPhoto"
-                        value={supervisorForm.reportPhoto}
-                        onChange={(e) => setSupervisorForm({ ...supervisorForm, reportPhoto: e.target.value })}
-                        placeholder="https://..."
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="reportNotes">הערות לדוח</Label>
-                      <Textarea
-                        id="reportNotes"
-                        value={supervisorForm.reportNotes}
-                        onChange={(e) => setSupervisorForm({ ...supervisorForm, reportNotes: e.target.value })}
-                        rows={4}
-                        placeholder="פירוט בעיות, בקשות מיוחדות או סטטוס מעבדה"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button variant={supervisorForm.sentToChaim ? 'outline' : 'secondary'} size="sm" onClick={() => setSupervisorForm({ ...supervisorForm, sentToChaim: !supervisorForm.sentToChaim })}>
-                        {supervisorForm.sentToChaim ? 'שלחתי לייצוא' : 'שלח לייצוא'}
-                      </Button>
-                      <span className="text-xs text-muted-foreground">ניתן לשלוח ברגע שהדוח מאושר.</span>
-                    </div>
                   </CardContent>
                 </Card>
               </div>
