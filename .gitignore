@@ -31,3 +31,4 @@ prisma/dev.db-journal
 
 # Runtime-uploaded files
 /public/uploads/
+scripts/backups/

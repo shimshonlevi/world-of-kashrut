@@ -46,8 +46,7 @@ const stage = (
 // Shared opening / approval stages reused across templates.
 const openingStage = () =>
   stage('s1', 'פתיחת תיק', 'קבלת פרטי היבואן ופתיחת תיק במערכת', 1, 1, [
-    field('שם איש קשר במפעל', 'text'),
-    field('טלפון איש קשר', 'text'),
+    // Factory contact lives in "פרטי התיק" — not restated as a checklist item.
     doc('חוזה התקשרות חתום'),
     task('נפתח תיק מסמכים לפרויקט'),
   ]);
@@ -79,11 +78,9 @@ export const defaultTemplates: WorkflowTemplate[] = [
     color: 'bg-amber-50 border-amber-200 text-amber-700',
     category: 'כללי',
     stages: [
+      // Reference facts (kosher body, supervisor, factory, price) live in the
+      // case's "פרטי התיק" — the checklist only tracks work that progresses.
       stage('p1', 'פתיחת תיק וחיוב', 'קליטת היבואן, גוף הכשרות, המשגיח והחיוב', 1, 1, [
-        field('גוף כשרות', 'text'),
-        field('משגיח', 'text'),
-        field('פרטי מפעל / איש קשר', 'longtext', false),
-        field('סכום שחויב / הצעת מחיר', 'text', false),
         task('הצעת מחיר נשלחה ללקוח', false),
       ]),
       stage('p2', 'דו״ח ייצור מהמשגיח', 'קבלת דוח הייצור מהמשגיח', 2, 3, [
