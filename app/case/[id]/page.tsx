@@ -489,6 +489,17 @@ export default function CasePage() {
     void persistProject({ stages, ...corePatch });
   };
 
+  // Remove a requirement from THIS case only (the template is untouched).
+  const removeRequirement = (stageId: string, reqId: string) => {
+    if (!project?.stages) return;
+    const stages = project.stages.map((s) =>
+      s.id === stageId ? { ...s, requirements: s.requirements.filter((r) => r.id !== reqId) } : s
+    );
+    setProject((prev) => (prev ? { ...prev, stages } : prev));
+    void persistProject({ stages });
+    toast({ title: 'הדרישה הוסרה מהתיק' });
+  };
+
   // Add a requirement directly to this case (kept in a dedicated "דרישות נוספות" group).
   const addAdHocRequirement = () => {
     if (!project || !newReqForm.label.trim()) return;
@@ -1153,6 +1164,7 @@ export default function CasePage() {
                         onUpdate={(patch) => updateRequirement(stage.id, req.id, patch)}
                         onUploadDocument={(file) => uploadRequirementDocument(stage.id, req.id, file)}
                         onRequest={() => requestRequirement(req)}
+                        onRemove={() => removeRequirement(stage.id, req.id)}
                         onAnalyzeAI={() => toast({ title: '🔍 ניתוח מסמך ב-AI — בקרוב', description: 'המערכת תקרא את המסמך (OCR), תחלץ תאריכים ואסמכתאות, ותמלא את השדות — עם אישור שלך לפני שמירה.' })}
                       />
                     ))}
@@ -1174,6 +1186,7 @@ export default function CasePage() {
                       onUpdate={(patch) => updateRequirement(stage.id, req.id, patch)}
                       onUploadDocument={(file) => uploadRequirementDocument(stage.id, req.id, file)}
                       onRequest={() => requestRequirement(req)}
+                      onRemove={() => removeRequirement(stage.id, req.id)}
                       onAnalyzeAI={() => toast({ title: '🔍 ניתוח מסמך ב-AI — בקרוב', description: 'המערכת תקרא את המסמך (OCR), תחלץ תאריכים ואסמכתאות, ותמלא את השדות — עם אישור שלך לפני שמירה.' })}
                     />
                   ))}
@@ -1224,13 +1237,22 @@ export default function CasePage() {
                             <CheckCircle2 className={cn('h-4 w-4', req.status === 'approved' ? 'text-emerald-600' : 'text-muted-foreground')} />
                             <span className="font-medium text-sm">{req.label}</span>
                           </div>
-                          <Badge variant="outline" className={cn('text-[10px]',
-                            req.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                            req.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
-                            sent ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-muted text-muted-foreground'
-                          )}>
-                            {req.status === 'approved' ? 'אושר' : req.status === 'rejected' ? 'נדחה' : sent ? `ממתין ל${req.approverName}` : 'טרם נשלח'}
-                          </Badge>
+                          <div className="flex items-center gap-1.5">
+                            <Badge variant="outline" className={cn('text-[10px]',
+                              req.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              req.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                              sent ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-muted text-muted-foreground'
+                            )}>
+                              {req.status === 'approved' ? 'אושר' : req.status === 'rejected' ? 'נדחה' : sent ? `ממתין ל${req.approverName}` : 'טרם נשלח'}
+                            </Badge>
+                            <button
+                              className="p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-destructive"
+                              title="הסר אישור מהתיק"
+                              onClick={() => { if (confirm(`להסיר את האישור "${req.label}" מהתיק?`)) removeRequirement(stage.id, req.id); }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
 
                         {!decided && (

@@ -15,6 +15,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   FileText,
   HelpCircle,
   Type,
@@ -27,6 +33,8 @@ import {
   Download,
   Send,
   ScanText,
+  MoreVertical,
+  Pencil,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RequirementSource } from '@/lib/types';
@@ -71,17 +79,22 @@ interface RequirementItemProps {
   onAnalyzeAI?: () => void;
   /** Where this requirement is defined (its template group) — shown for traceability. */
   originLabel?: string;
+  /** When provided, enables in-case management (rename / remove) for this requirement. */
+  onRemove?: () => void;
   busy?: boolean;
 }
 
-export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, onRequest, onAnalyzeAI, originLabel, busy }: RequirementItemProps) {
+export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, onRequest, onAnalyzeAI, originLabel, onRemove, busy }: RequirementItemProps) {
   const meta = TYPE_META[req.type];
   const Icon = meta.icon;
   const fileRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState(req.value ?? '');
   const [uploading, setUploading] = useState(false);
+  const [editingLabel, setEditingLabel] = useState(false);
+  const [labelDraft, setLabelDraft] = useState(req.label);
 
   useEffect(() => setDraft(req.value ?? ''), [req.value]);
+  useEffect(() => setLabelDraft(req.label), [req.label]);
 
   const satisfied = req.status === 'approved' || req.status === 'done';
 
@@ -120,7 +133,18 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
 
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="font-medium text-sm">{req.label || meta.label}</span>
+            {editingLabel ? (
+              <Input
+                autoFocus
+                value={labelDraft}
+                onChange={(e) => setLabelDraft(e.target.value)}
+                onBlur={() => { const v = labelDraft.trim(); if (v && v !== req.label) onUpdate({ label: v }); setEditingLabel(false); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') { setLabelDraft(req.label); setEditingLabel(false); } }}
+                className="h-7 max-w-xs text-sm"
+              />
+            ) : (
+              <span className="font-medium text-sm">{req.label || meta.label}</span>
+            )}
             {req.required && <span className="text-destructive text-xs">*</span>}
             <StatusBadge status={req.status} />
             {onRequest && req.source && req.source !== 'office' && !satisfied && (
@@ -131,6 +155,23 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
                 <Send className="h-3 w-3" />
                 בקש מ{SOURCE_LABEL[req.source]}
               </button>
+            )}
+            {onRemove && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={cn('p-1 rounded hover:bg-muted text-muted-foreground', !(onRequest && req.source && req.source !== 'office' && !satisfied) && 'mr-auto')}>
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setEditingLabel(true)}>
+                    <Pencil className="h-4 w-4 ml-2" /> שנה שם
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-destructive" onClick={() => { if (confirm(`להסיר את "${req.label}" מהתיק?`)) onRemove(); }}>
+                    <X className="h-4 w-4 ml-2" /> הסר מהתיק
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
           {/* Provenance: type · who provides it · which template group defines it */}
