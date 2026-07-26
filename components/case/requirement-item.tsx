@@ -193,7 +193,7 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
                   {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin ml-1" /> : <Upload className="h-3.5 w-3.5 ml-1" />}
                   {req.value ? 'החלף קובץ' : 'העלה קובץ'}
                 </Button>
-                {req.value && onAnalyzeAI && (
+                {onAnalyzeAI && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -202,6 +202,7 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
                   >
                     <ScanText className="h-3.5 w-3.5" />
                     נתח עם AI
+                    <span className="text-[9px] rounded bg-primary/10 px-1 py-px">בקרוב</span>
                   </Button>
                 )}
                 {req.status === 'submitted' && (

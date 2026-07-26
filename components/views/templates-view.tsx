@@ -443,6 +443,7 @@ function TemplateEditorDialog({ template, isOpen, onClose, onSave }: TemplateEdi
   const [expandedStage, setExpandedStage] = useState<string | null>(template.stages[0]?.id ?? null);
   const [saving, setSaving] = useState(false);
   const [library, setLibrary] = useState<CustomTool[]>([]);
+  const [team, setTeam] = useState<{ id: string; name: string; role: string }[]>([]);
 
   useEffect(() => {
     setEdited(template);
@@ -451,6 +452,7 @@ function TemplateEditorDialog({ template, isOpen, onClose, onSave }: TemplateEdi
 
   useEffect(() => {
     fetchCustomTools().then(setLibrary).catch(() => {});
+    fetch('/api/users/names').then((r) => r.json()).then((d) => setTeam(d.users || [])).catch(() => {});
   }, []);
 
   // Insert a reusable custom tool from the library as a new section.
@@ -745,6 +747,7 @@ function TemplateEditorDialog({ template, isOpen, onClose, onSave }: TemplateEdi
                             <RequirementRow
                               key={req.id}
                               req={req}
+                              team={team}
                               onChange={(patch) => updateRequirement(stage.id, req.id, patch)}
                               onRemove={() => removeRequirement(stage.id, req.id)}
                             />
@@ -804,10 +807,12 @@ function TemplateEditorDialog({ template, isOpen, onClose, onSave }: TemplateEdi
 
 function RequirementRow({
   req,
+  team,
   onChange,
   onRemove,
 }: {
   req: TemplateRequirement;
+  team: { id: string; name: string; role: string }[];
   onChange: (patch: Partial<TemplateRequirement>) => void;
   onRemove: () => void;
 }) {
@@ -882,14 +887,24 @@ function RequirementRow({
           />
         )}
 
-        {/* Approver role */}
+        {/* Approver — a specific system user picks it up in their 'לאישורי' inbox */}
         {req.type === 'approval' && (
-          <Input
-            value={req.approverRole ?? ''}
-            onChange={(e) => onChange({ approverRole: e.target.value })}
-            placeholder="מי מאשר (תפקיד / שם)"
-            className="h-8 flex-1 min-w-[12rem]"
-          />
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">מאשר:</span>
+            <Select
+              value={req.approverName ?? ''}
+              onValueChange={(v) => onChange({ approverName: v, approverRole: v })}
+            >
+              <SelectTrigger className="h-8 w-44">
+                <SelectValue placeholder="בחר איש צוות" />
+              </SelectTrigger>
+              <SelectContent>
+                {team.map((u) => (
+                  <SelectItem key={u.id} value={u.name}>{u.name}{u.role === 'admin' ? ' (מנהל)' : ''}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
 
         {/* Source — from whom (drives "request from…") */}
