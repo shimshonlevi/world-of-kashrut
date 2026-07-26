@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -165,6 +166,14 @@ export default function CasePage() {
   // The work tool: group the checklist by who we need it from, or by the
   // template's requirement groups (which shows where each item is defined).
   const [reqGroupBy, setReqGroupBy] = useState<'source' | 'stage'>('source');
+  // Ad-hoc requirement added directly to this case (beyond the template).
+  const [addReqOpen, setAddReqOpen] = useState(false);
+  const [newReqForm, setNewReqForm] = useState<{
+    type: ProjectRequirement['type'];
+    label: string;
+    source: NonNullable<ProjectRequirement['source']>;
+    required: boolean;
+  }>({ type: 'document', label: '', source: 'office', required: true });
   // Within "פרטי התיק": one sub-section at a time (pills) — no endless scrolling.
   const [detailsView, setDetailsView] = useState<'importer' | 'supervisor' | 'production' | 'financial'>('importer');
   const [newMessage, setNewMessage] = useState('');
@@ -478,6 +487,28 @@ export default function CasePage() {
     const corePatch = changed ? corePatchFromRequirement(changed) : {};
     setProject((prev) => (prev ? { ...prev, stages, ...corePatch } : prev)); // optimistic
     void persistProject({ stages, ...corePatch });
+  };
+
+  // Add a requirement directly to this case (kept in a dedicated "דרישות נוספות" group).
+  const addAdHocRequirement = () => {
+    if (!project || !newReqForm.label.trim()) return;
+    const req: ProjectRequirement = {
+      id: `adhoc-${Date.now().toString(36)}`,
+      type: newReqForm.type,
+      label: newReqForm.label.trim(),
+      required: newReqForm.required,
+      source: newReqForm.source,
+      status: 'pending',
+    };
+    const existing = project.stages ?? [];
+    const stages = existing.some((s) => s.id === 'adhoc')
+      ? existing.map((s) => (s.id === 'adhoc' ? { ...s, requirements: [...s.requirements, req] } : s))
+      : [...existing, { id: 'adhoc', name: 'דרישות נוספות', description: 'דרישות שנוספו לתיק זה', order: existing.length + 1, requirements: [req] }];
+    setProject((prev) => (prev ? { ...prev, stages } : prev));
+    void persistProject({ stages });
+    setAddReqOpen(false);
+    setNewReqForm({ type: 'document', label: '', source: 'office', required: true });
+    toast({ title: 'דרישה נוספה', description: req.label });
   };
 
   const uploadRequirementDocument = async (stageId: string, reqId: string, file: File) => {
@@ -1069,22 +1100,30 @@ export default function CasePage() {
 
               {docView === 'files' && <CaseDocuments project={project} />}
 
-              {/* Group-by switch: by who we need it from, or by template group */}
-              {docView === 'requirements' && requirementGroups.length > 0 && (
+              {/* Group-by switch + add ad-hoc requirement */}
+              {docView === 'requirements' && (
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground">קבץ לפי:</span>
-                  <button
-                    onClick={() => setReqGroupBy('source')}
-                    className={cn('rounded-full border px-2.5 py-1 transition-colors', reqGroupBy === 'source' ? 'border-primary bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:border-primary/40')}
-                  >
-                    ממי מבקשים
-                  </button>
-                  <button
-                    onClick={() => setReqGroupBy('stage')}
-                    className={cn('rounded-full border px-2.5 py-1 transition-colors', reqGroupBy === 'stage' ? 'border-primary bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:border-primary/40')}
-                  >
-                    שלב בתהליך
-                  </button>
+                  {requirementGroups.length > 0 && (
+                    <>
+                      <span className="text-muted-foreground">קבץ לפי:</span>
+                      <button
+                        onClick={() => setReqGroupBy('source')}
+                        className={cn('rounded-full border px-2.5 py-1 transition-colors', reqGroupBy === 'source' ? 'border-primary bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:border-primary/40')}
+                      >
+                        ממי מבקשים
+                      </button>
+                      <button
+                        onClick={() => setReqGroupBy('stage')}
+                        className={cn('rounded-full border px-2.5 py-1 transition-colors', reqGroupBy === 'stage' ? 'border-primary bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:border-primary/40')}
+                      >
+                        שלב בתהליך
+                      </button>
+                    </>
+                  )}
+                  <Button size="sm" variant="outline" className="h-7 gap-1 mr-auto" onClick={() => setAddReqOpen(true)}>
+                    <Plus className="h-3.5 w-3.5" />
+                    הוסף דרישה
+                  </Button>
                 </div>
               )}
 
@@ -1950,6 +1989,61 @@ export default function CasePage() {
           })()}
         </main>
       </div>
+
+      {/* Add ad-hoc requirement to this case */}
+      <Dialog open={addReqOpen} onOpenChange={setAddReqOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>הוספת דרישה לתיק</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <div className="space-y-1.5">
+              <Label>סוג</Label>
+              <Select value={newReqForm.type} onValueChange={(v) => setNewReqForm({ ...newReqForm, type: v as ProjectRequirement['type'] })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="document">מסמך</SelectItem>
+                  <SelectItem value="field">שדה</SelectItem>
+                  <SelectItem value="question">שאלה</SelectItem>
+                  <SelectItem value="task">משימה</SelectItem>
+                  <SelectItem value="approval">אישור</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>מה נדרש?</Label>
+              <Input
+                autoFocus
+                value={newReqForm.label}
+                onChange={(e) => setNewReqForm({ ...newReqForm, label: e.target.value })}
+                placeholder={newReqForm.type === 'document' ? 'למשל: תעודת מעבדה' : newReqForm.type === 'task' ? 'תיאור המשימה' : 'שם הדרישה'}
+              />
+            </div>
+            {newReqForm.type !== 'approval' && (
+              <div className="space-y-1.5">
+                <Label>מאת מי?</Label>
+                <Select value={newReqForm.source} onValueChange={(v) => setNewReqForm({ ...newReqForm, source: v as NonNullable<ProjectRequirement['source']> })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="office">המשרד</SelectItem>
+                    <SelectItem value="supervisor">המשגיח</SelectItem>
+                    <SelectItem value="importer">היבואן</SelectItem>
+                    <SelectItem value="factory">המפעל</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <label className="flex items-center gap-2 text-sm cursor-pointer pt-1">
+              <Switch checked={newReqForm.required} onCheckedChange={(v) => setNewReqForm({ ...newReqForm, required: v })} />
+              דרישת חובה
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddReqOpen(false)}>ביטול</Button>
+            <Button onClick={addAdHocRequirement} disabled={!newReqForm.label.trim()}>הוסף</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
