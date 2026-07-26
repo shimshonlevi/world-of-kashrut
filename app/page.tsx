@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AppLayout } from '@/components/layout/app-layout';
 import { KPICards } from '@/components/dashboard/kpi-cards';
 import { ActionCenter } from '@/components/dashboard/action-center';
+import { MessagesInbox } from '@/components/dashboard/messages-inbox';
 import { ComingSoon } from '@/components/dashboard/coming-soon';
 import { DashboardHero } from '@/components/dashboard/dashboard-hero';
 import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton';
@@ -272,8 +273,13 @@ function DashboardPage() {
             {/* KPI Cards */}
             <KPICards stats={stats} />
 
-            {/* Action Center — the daily worklist across all cases */}
-            <ActionCenter projects={userProjects} onOpenCase={(id) => router.push(`/case/${id}`)} />
+            {/* Daily worklist + recent messages, side by side */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <ActionCenter projects={userProjects} onOpenCase={(id) => router.push(`/case/${id}`)} />
+              </div>
+              <MessagesInbox projects={userProjects} />
+            </div>
 
             {/* Main Content */}
             {user?.role === 'admin' ? (

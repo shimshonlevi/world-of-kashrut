@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -104,6 +104,7 @@ type ChatTab = 'internal' | 'external';
 export default function CasePage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -155,6 +156,12 @@ export default function CasePage() {
   const [docView, setDocView] = useState<'requirements' | 'files'>('requirements');
   // Within the unified "תקשורת" tool: the live chat vs the activity log.
   const [commView, setCommView] = useState<'chat' | 'log'>('chat');
+  // Deep-link to a zone, e.g. from the dashboard messages inbox (?section=communication).
+  useEffect(() => {
+    const s = searchParams.get('section');
+    if (s && (TOOL_SECTIONS as string[]).includes(s)) setActiveSection(s as ActiveSection);
+  }, [searchParams]);
+
   // The work tool: group the checklist by who we need it from, or by the
   // template's requirement groups (which shows where each item is defined).
   const [reqGroupBy, setReqGroupBy] = useState<'source' | 'stage'>('source');
