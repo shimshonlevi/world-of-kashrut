@@ -56,6 +56,9 @@ export interface ChatMessage {
   message: string;
   timestamp: string;
   isInternal: boolean;
+  direction?: 'out' | 'in'; // out = we sent it, in = a reply we received
+  via?: 'whatsapp' | 'email' | 'manual';
+  requirementId?: string; // ties a request/reply to the requirement it concerns
 }
 
 export interface FlightInfo {

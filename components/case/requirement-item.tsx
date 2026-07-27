@@ -35,6 +35,7 @@ import {
   ScanText,
   MoreVertical,
   Pencil,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RequirementSource } from '@/lib/types';
@@ -76,6 +77,7 @@ interface RequirementItemProps {
   onUpdate: (patch: Partial<ProjectRequirement>) => void;
   onUploadDocument: (file: File) => Promise<void> | void;
   onRequest?: () => void;
+  onRecordReply?: () => void;
   onAnalyzeAI?: () => void;
   /** Where this requirement is defined (its template group) — shown for traceability. */
   originLabel?: string;
@@ -84,7 +86,7 @@ interface RequirementItemProps {
   busy?: boolean;
 }
 
-export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, onRequest, onAnalyzeAI, originLabel, onRemove, busy }: RequirementItemProps) {
+export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, onRequest, onRecordReply, onAnalyzeAI, originLabel, onRemove, busy }: RequirementItemProps) {
   const meta = TYPE_META[req.type];
   const Icon = meta.icon;
   const fileRef = useRef<HTMLInputElement>(null);
@@ -161,6 +163,15 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
               >
                 <Send className="h-3 w-3" />
                 בקש מ{SOURCE_LABEL[req.source]}
+              </button>
+            )}
+            {onRecordReply && req.source && req.source !== 'office' && (
+              <button
+                onClick={onRecordReply}
+                className={cn('inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground hover:underline', !(onRequest && !satisfied) && 'mr-auto')}
+              >
+                <MessageSquarePlus className="h-3 w-3" />
+                רשום תשובה
               </button>
             )}
             {onRemove && (

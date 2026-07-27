@@ -80,7 +80,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { Document, TimelineEvent, Project, ProjectRequirement, Supervisor } from '@/lib/types';
+import { Document, TimelineEvent, Project, ProjectRequirement, Supervisor, ChatMessage } from '@/lib/types';
 import { RequirementItem } from '@/components/case/requirement-item';
 import { CaseOverview } from '@/components/case/case-overview';
 import { CaseDocuments } from '@/components/case/case-documents';
@@ -167,6 +167,9 @@ export default function CasePage() {
   // The work tool: group the checklist by who we need it from, or by the
   // template's requirement groups (which shows where each item is defined).
   const [reqGroupBy, setReqGroupBy] = useState<'source' | 'stage'>('source');
+  // Record-a-reply dialog: which requirement the received reply concerns.
+  const [replyFor, setReplyFor] = useState<ProjectRequirement | null>(null);
+  const [replyText, setReplyText] = useState('');
   // Ad-hoc requirement added directly to this case (beyond the template).
   const [addReqOpen, setAddReqOpen] = useState(false);
   const [newReqForm, setNewReqForm] = useState<{
@@ -585,32 +588,58 @@ export default function CasePage() {
     void persistProject({ [field]: value } as Partial<Project>, 'נשמר');
   };
 
-  // Request a requirement from the responsible party (WhatsApp / email, prefilled).
+  // Who to contact for a requirement, by its source.
+  const contactFor = (req: ProjectRequirement) => {
+    if (req.source === 'supervisor') return { phone: project.supervisorPhone, email: undefined as string | undefined, name: project.supervisor || 'המשגיח' };
+    if (req.source === 'importer') return { phone: project.importerPhone, email: project.importerEmail, name: project.importer || 'היבואן' };
+    if (req.source === 'factory') return { phone: project.importerPhone, email: undefined, name: project.factoryName || 'המפעל' };
+    return { phone: undefined, email: undefined, name: '' };
+  };
+
+  // Append a message to the case chat (kept as the case's conversation record).
+  const appendChat = (msg: Partial<ChatMessage> & { message: string }) => {
+    const full = {
+      id: `m-${Date.now()}`,
+      sender: user?.name || 'מערכת',
+      timestamp: new Date().toLocaleString('he-IL'),
+      isInternal: false,
+      ...msg,
+    };
+    const chatHistory = [...project.chatHistory, full];
+    setProject((prev) => (prev ? { ...prev, chatHistory } : prev));
+    void persistProject({ chatHistory });
+  };
+
+  // Request a requirement from the responsible party (WhatsApp / email, prefilled)
+  // AND log the request in the case chat so the conversation is recorded here.
   const requestRequirement = (req: ProjectRequirement) => {
-    let phone: string | undefined;
-    let email: string | undefined;
-    let name = '';
-    if (req.source === 'supervisor') {
-      phone = project.supervisorPhone;
-      name = project.supervisor || '';
-    } else if (req.source === 'importer') {
-      phone = project.importerPhone;
-      email = project.importerEmail;
-      name = project.importer || '';
-    } else if (req.source === 'factory') {
-      phone = project.importerPhone; // best-available contact
-      name = project.factoryName || '';
-    }
+    const { phone, email, name } = contactFor(req);
     const action = req.type === 'document' ? 'נא לשלוח את המסמך' : 'נא למלא/לעדכן את הפרט';
     const msg = `שלום${name ? ' ' + name : ''}, עבור התיק "${project.projectName}" (${project.importer}) נדרש: ${req.label}. ${action}. תודה!`;
+    let via: 'whatsapp' | 'email' | 'manual' = 'manual';
     if (phone) {
+      via = 'whatsapp';
       window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
     } else if (email) {
+      via = 'email';
       window.open(`mailto:${email}?subject=${encodeURIComponent('בקשה — ' + project.projectName)}&body=${encodeURIComponent(msg)}`);
     } else {
       navigator.clipboard?.writeText(msg);
       toast({ title: 'אין איש קשר שמור', description: 'נוסח הבקשה הועתק — נא לשלוח ידנית' });
     }
+    // Record the outbound request on the case.
+    appendChat({ message: `בקשה נשלחה ל${name || 'גורם'}: ${req.label}`, direction: 'out', via, requirementId: req.id });
+    toast({ title: 'הבקשה תועדה בתיק', description: req.label });
+  };
+
+  // Record a reply that came back (via WhatsApp/email), attributed to the contact.
+  const recordReply = () => {
+    if (!replyFor || !replyText.trim()) return;
+    const { name } = contactFor(replyFor);
+    appendChat({ message: replyText.trim(), sender: name || 'גורם חיצוני', direction: 'in', requirementId: replyFor.id });
+    toast({ title: 'התשובה נרשמה בתיק' });
+    setReplyFor(null);
+    setReplyText('');
   };
 
   // Open WhatsApp to a phone with a prefilled message (logs it to the case too).
@@ -1166,6 +1195,7 @@ export default function CasePage() {
                         onUpdate={(patch) => updateRequirement(stage.id, req.id, patch)}
                         onUploadDocument={(file) => uploadRequirementDocument(stage.id, req.id, file)}
                         onRequest={() => requestRequirement(req)}
+                        onRecordReply={() => { setReplyFor(req); setReplyText(''); }}
                         onRemove={() => removeRequirement(stage.id, req.id)}
                         onAnalyzeAI={() => toast({ title: '🔍 ניתוח מסמך ב-AI — בקרוב', description: 'המערכת תקרא את המסמך (OCR), תחלץ תאריכים ואסמכתאות, ותמלא את השדות — עם אישור שלך לפני שמירה.' })}
                       />
@@ -1188,6 +1218,7 @@ export default function CasePage() {
                       onUpdate={(patch) => updateRequirement(stage.id, req.id, patch)}
                       onUploadDocument={(file) => uploadRequirementDocument(stage.id, req.id, file)}
                       onRequest={() => requestRequirement(req)}
+                      onRecordReply={() => { setReplyFor(req); setReplyText(''); }}
                       onRemove={() => removeRequirement(stage.id, req.id)}
                       onAnalyzeAI={() => toast({ title: '🔍 ניתוח מסמך ב-AI — בקרוב', description: 'המערכת תקרא את המסמך (OCR), תחלץ תאריכים ואסמכתאות, ותמלא את השדות — עם אישור שלך לפני שמירה.' })}
                     />
@@ -2013,6 +2044,35 @@ export default function CasePage() {
           })()}
         </main>
       </div>
+
+      {/* Record a reply received from a contact (WhatsApp/email → into the case) */}
+      <Dialog open={!!replyFor} onOpenChange={(o) => !o && setReplyFor(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>רישום תשובה שהתקבלה</DialogTitle>
+          </DialogHeader>
+          {replyFor && (
+            <div className="space-y-3 py-1">
+              <p className="text-xs text-muted-foreground">
+                בנוגע ל: <span className="font-medium text-foreground">{replyFor.label}</span>
+                {replyFor.source && replyFor.source !== 'office' && <> · מ{contactFor(replyFor).name}</>}
+              </p>
+              <Textarea
+                autoFocus
+                rows={4}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder="הדבק/הקלד את מה שהתקבל (וואטסאפ/מייל/טלפון)..."
+              />
+              <p className="text-[11px] text-muted-foreground">התשובה תירשם ביומן התיק ותיוחס לגורם — כך התכתובת מתועדת במקום אחד.</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReplyFor(null)}>ביטול</Button>
+            <Button onClick={recordReply} disabled={!replyText.trim()}>רשום בתיק</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add ad-hoc requirement to this case */}
       <Dialog open={addReqOpen} onOpenChange={setAddReqOpen}>
