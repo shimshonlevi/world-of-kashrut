@@ -2,7 +2,36 @@ import prisma from '../lib/prisma'
 import { mockProjects, defaultTemplates } from '../lib/data'
 import { serializeProjectForDb } from '../lib/project-utils'
 import { instantiateStages } from '../lib/templates'
+import { inferRequirementSource } from '../lib/requirement-source'
 import { hashPassword } from '../lib/auth'
+
+const SEED_USERS = new Set(['נחמה', 'שירה', 'מנהל'])
+
+// Fill each requirement's source + approver so a fresh install groups correctly.
+function normalizeStages(stages: any[]): any[] {
+  return (stages || []).map((s) => ({
+    ...s,
+    requirements: (s.requirements || []).map((r: any) => {
+      const out = { ...r }
+      if (!out.source && out.type !== 'field' && out.type !== 'approval') out.source = inferRequirementSource(out.label, out.type)
+      if (out.type === 'approval' && !out.approverName && out.approverRole && SEED_USERS.has(out.approverRole)) out.approverName = out.approverRole
+      return out
+    }),
+  }))
+}
+
+// Reflect a project's core flags in its bound requirement statuses (so progress isn't 0).
+function syncStatusesFromFlags(stages: any[], project: any): any[] {
+  return (stages || []).map((s) => ({
+    ...s,
+    requirements: (s.requirements || []).map((r: any) => {
+      if (r.bindKey && project[r.bindKey] === true && r.status !== 'approved' && r.status !== 'done') {
+        return { ...r, status: r.type === 'approval' ? 'approved' : 'done' }
+      }
+      return r
+    }),
+  }))
+}
 
 async function main() {
   // ---- Users (default password documented; change after first login) ----
@@ -28,7 +57,7 @@ async function main() {
         icon: t.icon,
         color: t.color,
         category: t.category ?? '',
-        stages: JSON.stringify(t.stages),
+        stages: JSON.stringify(normalizeStages(t.stages)),
         tools: JSON.stringify(t.enabledTools ?? []),
         isDefault: true,
         usageCount: t.usageCount,
@@ -58,7 +87,7 @@ async function main() {
       startDate: project.status === 'הסתיים' ? project.startDate : fmt(start),
       endDate: project.status === 'הסתיים' ? project.endDate : fmt(end),
       templateId: project.templateId ?? template.id,
-      stages: instantiateStages(template),
+      stages: syncStatusesFromFlags(normalizeStages(instantiateStages(template)), project),
       enabledTools: template.enabledTools ?? [],
       driveLink: '', // legacy field, unused — documents live in the Document index
     }

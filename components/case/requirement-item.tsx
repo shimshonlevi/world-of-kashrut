@@ -46,12 +46,12 @@ const SOURCE_LABEL: Record<RequirementSource, string> = {
   factory: 'המפעל',
 };
 
-const TYPE_META: Record<RequirementType, { icon: React.ComponentType<{ className?: string }>; label: string }> = {
-  document: { icon: FileText, label: 'מסמך' },
-  question: { icon: HelpCircle, label: 'שאלה' },
-  field: { icon: Type, label: 'שדה' },
-  task: { icon: CheckSquare, label: 'משימה' },
-  approval: { icon: ShieldCheck, label: 'אישור' },
+const TYPE_META: Record<RequirementType, { icon: React.ComponentType<{ className?: string }>; label: string; tone: string }> = {
+  document: { icon: FileText, label: 'מסמך', tone: 'bg-sky-100 text-sky-600' },
+  question: { icon: HelpCircle, label: 'שאלה', tone: 'bg-amber-100 text-amber-600' },
+  field: { icon: Type, label: 'שדה', tone: 'bg-slate-100 text-slate-600' },
+  task: { icon: CheckSquare, label: 'משימה', tone: 'bg-violet-100 text-violet-600' },
+  approval: { icon: ShieldCheck, label: 'אישור', tone: 'bg-primary/10 text-primary' },
 };
 
 function StatusBadge({ status }: { status: ProjectRequirement['status'] }) {
@@ -117,18 +117,25 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
   return (
     <div
       className={cn(
-        'rounded-lg border px-3 py-2.5 transition-colors',
-        satisfied ? 'border-emerald-200 bg-emerald-50/40' : req.status === 'rejected' ? 'border-red-200 bg-red-50/40' : 'bg-card hover:border-primary/30'
+        'relative overflow-hidden rounded-lg border px-3 py-2.5 transition-all',
+        satisfied ? 'border-emerald-200 bg-emerald-50/40' : req.status === 'rejected' ? 'border-red-200 bg-red-50/40' : req.status === 'submitted' ? 'border-amber-200 bg-amber-50/30' : 'bg-card hover:border-primary/30 hover:shadow-sm'
       )}
     >
+      {/* status accent on the start (right in RTL) edge */}
+      <span
+        className={cn(
+          'absolute inset-y-0 right-0 w-1',
+          satisfied ? 'bg-emerald-400' : req.status === 'rejected' ? 'bg-red-400' : req.status === 'submitted' ? 'bg-amber-400' : 'bg-transparent'
+        )}
+      />
       <div className="flex items-start gap-2.5">
         <span
           className={cn(
-            'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full',
-            satisfied ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'
+            'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
+            satisfied ? 'bg-emerald-500 text-white' : meta.tone
           )}
         >
-          {satisfied ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
+          {satisfied ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
         </span>
 
         <div className="min-w-0 flex-1 space-y-1.5">

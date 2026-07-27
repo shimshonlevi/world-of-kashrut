@@ -85,6 +85,7 @@ import { RequirementItem } from '@/components/case/requirement-item';
 import { CaseOverview } from '@/components/case/case-overview';
 import { CaseDocuments } from '@/components/case/case-documents';
 import { inferDocumentCategory } from '@/lib/documents';
+import { inferRequirementSource } from '@/lib/requirement-source';
 import { cn } from '@/lib/utils';
 import { overallProgress, stageProgress, corePatchFromRequirement, isRequirementSatisfied } from '@/lib/templates';
 import { deadlineInfo } from '@/lib/dates';
@@ -653,11 +654,12 @@ export default function CasePage() {
     { key: 'factory', label: 'מהמפעל', hint: 'נתונים ואישורים מהמפעל' },
     { key: 'office', label: 'במשרד', hint: 'משימות שאנחנו מבצעים' },
   ] as const;
+  const effectiveSource = (r: ProjectRequirement) => r.source ?? inferRequirementSource(r.label, r.type);
   const requirementsBySource = SOURCE_GROUPS.map((g) => ({
     ...g,
     items: stages.flatMap((s) =>
       s.requirements
-        .filter((r) => r.type !== 'approval' && (r.source ?? 'office') === g.key)
+        .filter((r) => r.type !== 'approval' && effectiveSource(r) === g.key)
         .map((r) => ({ stage: s, req: r }))
     ),
   })).filter((g) => g.items.length > 0);
