@@ -383,6 +383,11 @@ function DashboardPage() {
             projects={userProjects}
             onSelectProject={handleSelectProject}
             onOpenFullCase={handleOpenFullCase}
+            onUpdateProject={handleUpdateProject}
+            onArchiveProject={handleArchiveProject}
+            onDeleteProject={handleDeleteProject}
+            onBulkArchive={handleBulkArchive}
+            isAdmin={user?.role === 'admin'}
           />
         )}
 
