@@ -8,6 +8,7 @@ import { caseMilestones } from '@/lib/pipeline';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -68,6 +69,7 @@ interface AdvancedProjectTableProps {
   onUpdateProject?: (id: string, patch: Partial<Project>) => void;
   onArchiveProject?: (project: Project) => void;
   onDeleteProject?: (project: Project) => void;
+  onBulkArchive?: (projects: Project[]) => void;
   isAdmin?: boolean;
   selectedProjectId?: string;
 }
@@ -90,10 +92,12 @@ export function AdvancedProjectTable({
   onUpdateProject,
   onArchiveProject,
   onDeleteProject,
+  onBulkArchive,
   isAdmin,
   selectedProjectId,
 }: AdvancedProjectTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>('urgency');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | 'all'>('all');
@@ -238,6 +242,20 @@ export function AdvancedProjectTable({
 
   const stop = (e: React.MouseEvent | React.KeyboardEvent) => e.stopPropagation();
 
+  // Multi-select for bulk actions
+  const visibleIds = filteredAndSortedProjects.map((p) => p.id);
+  const allSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedRows.has(id));
+  const someSelected = visibleIds.some((id) => selectedRows.has(id));
+  const toggleRow = (id: string) =>
+    setSelectedRows((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const toggleAll = () =>
+    setSelectedRows(allSelected ? new Set() : new Set(visibleIds));
+  const selectedProjects = filteredAndSortedProjects.filter((p) => selectedRows.has(p.id));
+
   if (projects.length === 0) {
     return (
       <Card className="border-dashed">
@@ -376,11 +394,29 @@ export function AdvancedProjectTable({
           })}
         </div>
 
+        {/* Bulk action bar */}
+        {onBulkArchive && selectedRows.size > 0 && (
+          <div className="hidden md:flex items-center justify-between gap-3 border-b bg-primary/5 px-4 py-2 text-sm">
+            <span className="font-medium">{selectedRows.size} נבחרו</span>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => { onBulkArchive(selectedProjects); setSelectedRows(new Set()); }}>
+                <Archive className="h-3.5 w-3.5" /> העבר לארכיון
+              </Button>
+              <Button size="sm" variant="ghost" className="h-8" onClick={() => setSelectedRows(new Set())}>נקה בחירה</Button>
+            </div>
+          </div>
+        )}
+
         {/* Desktop: full table */}
         <div className="overflow-x-auto hidden md:block">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow className="bg-muted/30 hover:bg-muted/30">
+                {onBulkArchive && (
+                  <TableHead className="w-8">
+                    <Checkbox checked={allSelected ? true : someSelected ? 'indeterminate' : false} onCheckedChange={toggleAll} aria-label="בחר הכל" />
+                  </TableHead>
+                )}
                 <SortHeader field="projectName" label="פרויקט" />
                 <SortHeader field="importer" label="יבואן" />
                 <TableHead className="text-right font-semibold hidden md:table-cell">התקדמות</TableHead>
@@ -394,7 +430,7 @@ export function AdvancedProjectTable({
                 <Fragment key={group.key}>
                   {groupBy !== 'none' && (
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableCell colSpan={10} className="py-2 text-sm font-semibold">
+                      <TableCell colSpan={onBulkArchive ? 7 : 6} className="py-2 text-sm font-semibold">
                         {group.label} <span className="text-muted-foreground font-normal">({group.items.length})</span>
                       </TableCell>
                     </TableRow>
@@ -408,10 +444,15 @@ export function AdvancedProjectTable({
                   <TableRow
                     key={project.id}
                     onClick={() => onSelectProject(project)}
-                    className={`cursor-pointer transition-colors ${getRowStyle(project, isSelected)}`}
+                    className={`cursor-pointer transition-colors ${getRowStyle(project, selectedRows.has(project.id) || isSelected)}`}
                   >
-                    <TableCell className="py-3.5">
-                      <div className="space-y-1.5">
+                    {onBulkArchive && (
+                      <TableCell onClick={stop} className="w-8">
+                        <Checkbox checked={selectedRows.has(project.id)} onCheckedChange={() => toggleRow(project.id)} aria-label="בחר תיק" />
+                      </TableCell>
+                    )}
+                    <TableCell className="py-2.5">
+                      <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <Link
                             href={`/case/${project.id}`}

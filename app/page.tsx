@@ -242,6 +242,29 @@ function DashboardPage() {
     }
   };
 
+  // Archive several cases at once (single confirmation).
+  const handleBulkArchive = async (list: Project[]) => {
+    if (list.length === 0) return;
+    if (!confirm(`להעביר ${list.length} תיקים לארכיון? ניתן לשחזר בהמשך.`)) return;
+    const ids = new Set(list.map((p) => p.id));
+    setProjects((prev) => prev.filter((p) => !ids.has(p.id))); // optimistic
+    try {
+      await Promise.all(
+        list.map((p) =>
+          fetch(`/api/projects/${p.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ archived: true }),
+          })
+        )
+      );
+      toast({ title: 'הועבר לארכיון', description: `${list.length} תיקים` });
+    } catch {
+      toast({ title: 'שגיאה', description: 'חלק מהתיקים לא אורכבו', variant: 'destructive' });
+      fetch('/api/projects').then((r) => r.json()).then((d) => setProjects(d.projects || [])).catch(() => {});
+    }
+  };
+
   const handleToggleNotifications = () => {
     setIsNotificationsOpen(!isNotificationsOpen);
     if (!isNotificationsOpen) {
@@ -329,6 +352,7 @@ function DashboardPage() {
                     onUpdateProject={handleUpdateProject}
                     onArchiveProject={handleArchiveProject}
                     onDeleteProject={handleDeleteProject}
+                    onBulkArchive={handleBulkArchive}
                     isAdmin={user?.role === 'admin'}
                     selectedProjectId={selectedProject?.id}
                   />
