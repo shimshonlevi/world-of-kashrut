@@ -383,13 +383,9 @@ export function AdvancedProjectTable({
               <TableRow className="bg-muted/30 hover:bg-muted/30">
                 <SortHeader field="projectName" label="פרויקט" />
                 <SortHeader field="importer" label="יבואן" />
-                <TableHead className="text-right font-semibold hidden xl:table-cell">משגיח · כשרות</TableHead>
                 <TableHead className="text-right font-semibold hidden md:table-cell">התקדמות</TableHead>
                 <SortHeader field="status" label="סטטוס" />
-                <TableHead className="text-right font-semibold hidden lg:table-cell">מסלול כשרות</TableHead>
                 <TableHead className="text-right font-semibold hidden lg:table-cell">אחראי</TableHead>
-                <TableHead className="text-right font-semibold hidden lg:table-cell">תשלום · דוח</TableHead>
-                <TableHead className="text-right font-semibold hidden xl:table-cell">קשר</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
@@ -453,13 +449,6 @@ export function AdvancedProjectTable({
                       <p className="text-[11px] text-muted-foreground">{project.importerPhone}</p>
                     </TableCell>
 
-                    <TableCell className="hidden xl:table-cell">
-                      <p className="text-sm">{project.supervisor || '—'}</p>
-                      {project.kosherBody && (
-                        <Badge variant="outline" className="text-[10px] mt-0.5">{project.kosherBody}</Badge>
-                      )}
-                    </TableCell>
-
                     <TableCell className="hidden md:table-cell">
                       <div className="w-28">
                         <div className="flex items-center justify-between mb-1">
@@ -496,24 +485,6 @@ export function AdvancedProjectTable({
                       )}
                     </TableCell>
 
-                    {/* Kosher pipeline milestones (mirrors the Excel columns) */}
-                    <TableCell className="hidden lg:table-cell" onClick={stop}>
-                      <div className="flex items-center gap-1">
-                        {caseMilestones(project).map((m) => (
-                          <TooltipProvider key={m.key}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className={cn('h-2.5 w-2.5 rounded-full', m.done ? 'bg-emerald-500' : 'bg-muted-foreground/25')} />
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="text-xs">
-                                {m.label}: {m.done ? '✓ בוצע' : 'טרם'}
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ))}
-                      </div>
-                    </TableCell>
-
                     {/* Responsible — inline editable */}
                     <TableCell className="hidden lg:table-cell" onClick={stop}>
                       {editable ? (
@@ -532,72 +503,12 @@ export function AdvancedProjectTable({
                       )}
                     </TableCell>
 
-                    {/* Paid + Report quick toggles */}
-                    <TableCell className="hidden lg:table-cell" onClick={stop}>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          disabled={!editable}
-                          onClick={() => onUpdateProject?.(project.id, { paid: !project.paid })}
-                          className={cn(
-                            'inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium transition-colors',
-                            project.paid
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                              : 'bg-muted text-muted-foreground hover:bg-muted/70',
-                            !editable && 'cursor-default'
-                          )}
-                        >
-                          <DollarSign className="h-3 w-3" />
-                          {project.paid ? 'שולם' : 'חוב'}
-                        </button>
-                        <button
-                          disabled={!editable}
-                          onClick={() => onUpdateProject?.(project.id, { reportReceived: !project.reportReceived })}
-                          className={cn(
-                            'inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium transition-colors',
-                            project.reportReceived
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                              : 'bg-muted text-muted-foreground hover:bg-muted/70',
-                            !editable && 'cursor-default'
-                          )}
-                        >
-                          <FileCheck className="h-3 w-3" />
-                          דוח
-                        </button>
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="hidden xl:table-cell" onClick={stop}>
-                      <div className="flex items-center gap-1">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => onOpenFullCase(project)}>
-                                <ExternalLink className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>פתח תיק מלא</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30" onClick={() => window.open(`https://wa.me/${project.importerPhone?.replace(/\D/g, '')}`, '_blank')}>
-                                <MessageCircle className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>WhatsApp</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30" onClick={() => window.open(`tel:${project.importerPhone}`, '_self')}>
-                                <Phone className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>התקשר</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                    {/* Actions */}
+                    <TableCell onClick={stop}>
+                      <div className="flex items-center justify-end gap-0.5">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" title="פתח תיק" onClick={() => onOpenFullCase(project)}>
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -608,6 +519,14 @@ export function AdvancedProjectTable({
                             <DropdownMenuItem onClick={() => onOpenFullCase(project)}>
                               <Eye className="h-4 w-4 ml-2" />
                               פתח תיק מלא
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => window.open(`https://wa.me/${project.importerPhone?.replace(/\D/g, '')}`, '_blank')}>
+                              <MessageCircle className="h-4 w-4 ml-2 text-emerald-600" />
+                              WhatsApp
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => window.open(`tel:${project.importerPhone}`, '_self')}>
+                              <Phone className="h-4 w-4 ml-2 text-blue-600" />
+                              התקשר
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => window.open(`mailto:${project.importerEmail}`, '_self')}>
                               <Mail className="h-4 w-4 ml-2" />
@@ -635,14 +554,6 @@ export function AdvancedProjectTable({
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                    </TableCell>
-
-                    <TableCell onClick={stop}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                        <Link href={`/case/${project.id}`}>
-                          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-                        </Link>
-                      </Button>
                     </TableCell>
                   </TableRow>
                 );

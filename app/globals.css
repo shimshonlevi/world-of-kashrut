@@ -30,7 +30,8 @@
   --chart-3: oklch(0.6 0.13 150);
   --chart-4: oklch(0.6 0.16 300);
   --chart-5: oklch(0.62 0.16 25);
-  --radius: 0.75rem;
+  /* Tighter radius — office tools read as crisp, not bubbly */
+  --radius: 0.5rem;
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.21 0.012 260);
   --sidebar-primary: oklch(0.585 0.11 78);
@@ -146,6 +147,11 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
+  /* Denser base — more information per screen, the office/CRM default.
+     Spacing is rem-based, so this proportionally tightens the whole UI. */
+  html {
+    font-size: 15px;
+  }
 }
 
 /* Subtle entrance animation — used on primary content for a polished feel */
@@ -219,12 +225,12 @@
   background: linear-gradient(135deg, oklch(0.8 0.13 86), oklch(0.6 0.11 72));
 }
 
-/* Soft premium elevation */
+/* Flat, calm elevation — a workspace surface, not a marketing card */
 .elevated {
-  box-shadow: 0 1px 2px oklch(0.2 0.01 260 / 0.05), 0 8px 24px -8px oklch(0.2 0.01 260 / 0.12);
+  box-shadow: 0 1px 2px oklch(0.2 0.01 260 / 0.04), 0 1px 3px oklch(0.2 0.01 260 / 0.07);
 }
 .dark .elevated {
-  box-shadow: 0 1px 2px oklch(0 0 0 / 0.2), 0 8px 24px -8px oklch(0 0 0 / 0.5);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.2), 0 1px 3px oklch(0 0 0 / 0.3);
 }
 
 /* RTL Support */

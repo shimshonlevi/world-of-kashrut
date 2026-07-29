@@ -86,16 +86,16 @@ export function KPICards({ stats }: KPICardsProps) {
   };
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {cards.map((card) => {
         const t = TONES[card.tone];
         return (
           <TooltipProvider key={card.id}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Card className="bg-card border border-border/60 elevated hover:-translate-y-0.5 hover:shadow-lg transition-all cursor-default overflow-hidden relative">
-                  {/* top accent rail */}
-                  <div className={`absolute inset-x-0 top-0 h-1 ${t.rail}`} />
+                <Card className="bg-card border border-border/60 transition-colors hover:border-border cursor-default overflow-hidden relative">
+                  {/* thin start-edge accent (RTL: right) */}
+                  <div className={`absolute inset-y-0 right-0 w-0.5 ${t.rail}`} />
                   {card.pulse && (
                     <div className="absolute top-3.5 left-3">
                       <span className="relative flex h-2.5 w-2.5">
@@ -104,16 +104,16 @@ export function KPICards({ stats }: KPICardsProps) {
                       </span>
                     </div>
                   )}
-                  <CardContent className="p-5">
+                  <CardContent className="p-3.5">
                     <div className="flex items-start justify-between">
-                      <div className="space-y-3">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-medium text-muted-foreground">
                           {card.label}
                         </p>
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-3xl font-bold text-foreground tabular-nums">{card.value}</span>
+                          <span className="text-2xl font-bold text-foreground tabular-nums">{card.value}</span>
                           {'suffix' in card && card.suffix && (
-                            <span className="text-lg text-muted-foreground">{card.suffix}</span>
+                            <span className="text-base text-muted-foreground">{card.suffix}</span>
                           )}
                         </div>
                         {card.trend !== null && (
@@ -132,8 +132,8 @@ export function KPICards({ stats }: KPICardsProps) {
                           </div>
                         )}
                       </div>
-                      <div className={`p-3 rounded-xl ${t.chip}`}>
-                        <card.icon className={`h-6 w-6 ${t.icon}`} />
+                      <div className={`p-2 rounded-lg ${t.chip}`}>
+                        <card.icon className={`h-4 w-4 ${t.icon}`} />
                       </div>
                     </div>
                   </CardContent>

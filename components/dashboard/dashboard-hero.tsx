@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { CalendarDays, FolderKanban, AlertTriangle, CheckCircle2, BadgeCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -35,8 +36,8 @@ interface DashboardHeroProps {
 }
 
 /**
- * Premium branded welcome banner for the dashboard — the first thing managers
- * see. Time-aware greeting, Hebrew date, and at-a-glance status chips.
+ * Compact office header for the dashboard — greeting + date on the start,
+ * an at-a-glance status strip (data, not decoration) on the end.
  */
 export function DashboardHero({ name, activeProjects, urgentTasks, pendingApprovals = 0, onApprovalsClick, children }: DashboardHeroProps) {
   // Render date only after mount to avoid SSR/client hydration mismatch.
@@ -44,51 +45,33 @@ export function DashboardHero({ name, activeProjects, urgentTasks, pendingApprov
   useEffect(() => setDate(hebrewDate()), []);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-l from-card via-card to-gold/[0.06] elevated">
-      {/* Decorative gold glow */}
-      <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-gold/10 blur-3xl" />
-      <div className="pointer-events-none absolute right-0 bottom-0 h-32 w-32 rounded-full bg-primary/[0.04] blur-2xl" />
-
-      <div className="relative flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-            <CalendarDays className="h-3.5 w-3.5 text-gold" />
-            <span className="truncate">{date || ' '}</span>
-          </div>
-          <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            {greeting()}
-            {name ? <span className="text-gold">, {name}</span> : ''}
-          </h1>
-
-          {/* Status chips */}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/60 px-3 py-1 text-xs font-medium text-foreground">
-              <FolderKanban className="h-3.5 w-3.5 text-primary" />
-              {activeProjects} תיקים פעילים
-            </span>
-            {urgentTasks > 0 ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/60 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                {urgentTasks} משימות דחופות היום
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/60 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                אין משימות דחופות — יום מצוין!
-              </span>
-            )}
-            {pendingApprovals > 0 && (
-              <button
-                onClick={onApprovalsClick}
-                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-              >
-                <BadgeCheck className="h-3.5 w-3.5" />
-                {pendingApprovals} ממתינים לאישור
-              </button>
-            )}
-          </div>
+    <div className="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">
+          {greeting()}{name ? `, ${name}` : ''}
+        </h1>
+        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <CalendarDays className="h-3.5 w-3.5" />
+          <span className="truncate">{date || ' '}</span>
         </div>
+      </div>
 
+      {/* Compact status strip */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+          <FolderKanban className="h-3.5 w-3.5" />
+          <span className="font-semibold text-foreground tabular-nums">{activeProjects}</span> תיקים פעילים
+        </span>
+        <span className={cn('inline-flex items-center gap-1.5', urgentTasks > 0 ? 'text-amber-700' : 'text-emerald-700')}>
+          {urgentTasks > 0 ? <AlertTriangle className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+          {urgentTasks > 0 ? <><span className="font-semibold tabular-nums">{urgentTasks}</span> דחופים</> : 'אין דחופים'}
+        </span>
+        {pendingApprovals > 0 && (
+          <button onClick={onApprovalsClick} className="inline-flex items-center gap-1.5 text-primary hover:underline">
+            <BadgeCheck className="h-3.5 w-3.5" />
+            <span className="font-semibold tabular-nums">{pendingApprovals}</span> לאישורך
+          </button>
+        )}
         {children && <div className="shrink-0">{children}</div>}
       </div>
     </div>

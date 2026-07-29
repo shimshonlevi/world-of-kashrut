@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -129,106 +130,78 @@ export function ClientsView({ projects }: ClientsViewProps) {
           <Loader2 className="h-6 w-6 animate-spin ml-2" />
           טוען...
         </div>
+      ) : rows.length === 0 ? (
+        <Card className="border-dashed"><CardContent className="py-16 text-center text-muted-foreground">לא נמצאו יבואנים.</CardContent></Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rows.map((imp) => (
-            <Card key={imp.id} className="group hover:shadow-lg transition-all duration-200 border-border/60">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border-2 border-primary/10">
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
-                        {imp.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-base">{imp.name}</CardTitle>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {imp.country || '—'}
+        <Card className="elevated border-border/60 overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="text-right font-semibold">יבואן</TableHead>
+                  <TableHead className="text-right font-semibold hidden md:table-cell">איש קשר</TableHead>
+                  <TableHead className="text-right font-semibold hidden lg:table-cell">מדינה</TableHead>
+                  <TableHead className="text-right font-semibold">תיקים</TableHead>
+                  <TableHead className="w-10"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((imp) => (
+                  <TableRow key={imp.id} className="hover:bg-muted/40">
+                    <TableCell className="py-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">
+                          {imp.name.charAt(0)}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{imp.name}</p>
+                          {imp.phone && <p className="text-[11px] text-muted-foreground truncate">{imp.phone}</p>}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem className="gap-2" onClick={() => setEditing(imp)}>
-                        <Pencil className="h-4 w-4" />
-                        עריכה
-                      </DropdownMenuItem>
-                      {imp.phone && (
-                        <DropdownMenuItem className="gap-2" onClick={() => window.open(`tel:${imp.phone}`)}>
-                          <Phone className="h-4 w-4" />
-                          התקשר
-                        </DropdownMenuItem>
-                      )}
-                      {imp.email && (
-                        <DropdownMenuItem className="gap-2" onClick={() => window.open(`mailto:${imp.email}`)}>
-                          <Mail className="h-4 w-4" />
-                          שלח מייל
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {(imp.contactPerson || imp.phone) && (
-                  <div className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5" />
-                    {imp.contactPerson || 'איש קשר'} {imp.phone && <span className="text-foreground/70">· {imp.phone}</span>}
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="gap-1">
-                    <Building2 className="h-3 w-3" />
-                    {imp.projectCount} תיקים
-                  </Badge>
-                  {imp.activeProjects > 0 && (
-                    <Badge className="gap-1 bg-primary/10 text-primary hover:bg-primary/20">{imp.activeProjects} פעילים</Badge>
-                  )}
-                </div>
-
-                {imp.cases.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {imp.cases.slice(0, 4).map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => router.push(`/case/${c.id}`)}
-                        className="text-[11px] rounded-md border border-border bg-muted/40 px-2 py-1 hover:border-primary/40 hover:text-primary transition-colors truncate max-w-[10rem]"
-                      >
-                        {c.projectName}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2 pt-2 border-t">
-                  <Button variant="outline" size="sm" className="flex-1 gap-2 h-9" disabled={!imp.phone} onClick={() => window.open(`tel:${imp.phone}`)}>
-                    <Phone className="h-3.5 w-3.5" />
-                    התקשר
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1 gap-2 h-9 text-emerald-600" disabled={!imp.phone} onClick={() => window.open(`https://wa.me/${imp.phone?.replace(/\D/g, '')}`, '_blank')}>
-                    <MessageCircle className="h-3.5 w-3.5" />
-                    WhatsApp
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1 gap-2 h-9" disabled={!imp.email} onClick={() => window.open(`mailto:${imp.email}`)}>
-                    <Mail className="h-3.5 w-3.5" />
-                    מייל
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {rows.length === 0 && (
-            <div className="col-span-full text-center py-16 text-muted-foreground">לא נמצאו יבואנים.</div>
-          )}
-        </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{imp.contactPerson || '—'}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{imp.country || '—'}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm tabular-nums">{imp.projectCount}</span>
+                        {imp.activeProjects > 0 && (
+                          <Badge className="h-5 gap-1 bg-primary/10 text-primary hover:bg-primary/10 text-[10px]">{imp.activeProjects} פעילים</Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem className="gap-2" onClick={() => setEditing(imp)}>
+                            <Pencil className="h-4 w-4" /> עריכה
+                          </DropdownMenuItem>
+                          {imp.phone && (
+                            <DropdownMenuItem className="gap-2" onClick={() => window.open(`https://wa.me/${imp.phone?.replace(/\D/g, '')}`, '_blank')}>
+                              <MessageCircle className="h-4 w-4 text-emerald-600" /> WhatsApp
+                            </DropdownMenuItem>
+                          )}
+                          {imp.phone && (
+                            <DropdownMenuItem className="gap-2" onClick={() => window.open(`tel:${imp.phone}`)}>
+                              <Phone className="h-4 w-4 text-blue-600" /> התקשר
+                            </DropdownMenuItem>
+                          )}
+                          {imp.email && (
+                            <DropdownMenuItem className="gap-2" onClick={() => window.open(`mailto:${imp.email}`)}>
+                              <Mail className="h-4 w-4" /> שלח מייל
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
       )}
 
       {/* Add / edit dialog */}

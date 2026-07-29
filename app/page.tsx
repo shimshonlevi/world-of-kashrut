@@ -266,7 +266,7 @@ function DashboardPage() {
       alertCount={totalAlerts}
       onToggleNotifications={handleToggleNotifications}
     >
-      <div className="max-w-7xl mx-auto space-y-6 fade-up">
+      <div className="max-w-7xl mx-auto space-y-4 fade-up">
         {/* Render different content based on current page */}
         {currentPage === 'dashboard' && (
           <>
