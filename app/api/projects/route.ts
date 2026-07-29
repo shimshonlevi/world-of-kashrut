@@ -19,10 +19,12 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const responsible = searchParams.get('responsible');
+    const archived = searchParams.get('archived'); // '1' = only archived; default = only active
 
     let query: any = {};
     if (status) query.status = status;
     if (responsible) query.responsible = responsible;
+    query.archivedAt = archived === '1' ? { not: null } : null;
 
     const rawProjects = await prisma.project.findMany({ 
       where: query,

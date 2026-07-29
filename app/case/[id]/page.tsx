@@ -14,6 +14,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -77,6 +84,8 @@ import {
   Pencil,
   Files,
   Layers,
+  Archive,
+  MoreVertical,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -491,6 +500,42 @@ export default function CasePage() {
     const corePatch = changed ? corePatchFromRequirement(changed) : {};
     setProject((prev) => (prev ? { ...prev, stages, ...corePatch } : prev)); // optimistic
     void persistProject({ stages, ...corePatch });
+  };
+
+  // Archive this case (reversible) — it leaves the active lists.
+  const archiveProject = async () => {
+    if (!project || !confirm(`להעביר את "${project.projectName}" לארכיון? ניתן לשחזר בהמשך.`)) return;
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived: true }),
+      });
+      if (!res.ok) throw new Error('failed');
+      toast({ title: 'הועבר לארכיון', description: project.projectName });
+      router.push('/');
+    } catch {
+      toast({ title: 'שגיאה', description: 'העברה לארכיון נכשלה', variant: 'destructive' });
+    }
+  };
+
+  // Permanently delete this case + its documents/logs. Irreversible; admin only.
+  const deleteProjectPermanent = async () => {
+    if (!project) return;
+    const typed = window.prompt(`מחיקה לצמיתות תמחק את התיק, המסמכים והיומן — ללא שחזור.\nלאישור, הקלד את שם התיק:\n"${project.projectName}"`);
+    if (typed == null) return;
+    if (typed.trim() !== project.projectName.trim()) {
+      toast({ title: 'השם לא תואם', description: 'המחיקה בוטלה', variant: 'destructive' });
+      return;
+    }
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('failed');
+      toast({ title: 'התיק נמחק לצמיתות', description: project.projectName });
+      router.push('/');
+    } catch {
+      toast({ title: 'שגיאה', description: 'המחיקה נכשלה', variant: 'destructive' });
+    }
   };
 
   // Remove a requirement from THIS case only (the template is untouched).
@@ -997,6 +1042,26 @@ export default function CasePage() {
                   <span className="hidden sm:inline">אימייל</span>
                 </a>
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="px-2">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={archiveProject}>
+                    <Archive className="h-4 w-4 ml-2" /> העבר לארכיון
+                  </DropdownMenuItem>
+                  {user?.role === 'admin' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-destructive" onClick={deleteProjectPermanent}>
+                        <Trash2 className="h-4 w-4 ml-2" /> מחק לצמיתות
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 

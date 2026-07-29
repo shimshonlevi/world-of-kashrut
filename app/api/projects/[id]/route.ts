@@ -59,25 +59,42 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
+// Archive / restore (reversible). PATCH { archived: true | false }.
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const { archived } = await request.json();
+    const project = await prisma.project.update({
+      where: { id },
+      data: { archivedAt: archived ? new Date() : null },
+    });
+    return NextResponse.json({ project: deserializeProjectFromDb(project) });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: 'כישלון בעדכון' }, { status: 500 });
+  }
+}
+
+// Permanent delete — removes the project and cleans up its documents (rows +
+// blobs) and audit logs. Irreversible.
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const project = await prisma.project.delete({ where: { id } });
-    
-    // Log deletion
-    await prisma.auditLog.create({
-      data: {
-        projectId: id,
-        action: 'DELETE',
-        fieldName: 'project',
-        oldValue: project.projectName,
-        newValue: null,
-        performedBy: 'מערכת',
-      },
-    }).catch(() => {
-      // Ignore if this fails - project is already deleted
-    });
 
+    // Clean up the project's documents (blob bytes + index rows) first.
+    const docs = await prisma.document.findMany({ where: { projectId: id } }).catch(() => []);
+    if (docs.length && process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        const { del } = await import('@vercel/blob');
+        await Promise.all(docs.filter((d) => d.storage === 'blob').map((d) => del(d.url).catch(() => {})));
+      } catch (e) {
+        console.error('[projects] blob cleanup failed', e);
+      }
+    }
+    await prisma.document.deleteMany({ where: { projectId: id } }).catch(() => {});
+    await prisma.auditLog.deleteMany({ where: { projectId: id } }).catch(() => {});
+
+    const project = await prisma.project.delete({ where: { id } });
     return NextResponse.json({ project: deserializeProjectFromDb(project) });
   } catch (err) {
     console.error(err);

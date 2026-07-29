@@ -51,10 +51,12 @@ model Project {
   clientAwaitingResponse  Boolean  @default(false)
   productionDetails       String?
   approvers               String   @default("[]")
+  archivedAt              DateTime? // set = archived (hidden from lists, restorable)
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
   @@index([responsible])
+  @@index([archivedAt])
   @@index([status])
   @@index([currentStage])
 }

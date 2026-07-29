@@ -205,6 +205,43 @@ function DashboardPage() {
     }
   };
 
+  // Archive a case (reversible) — drops it from the active lists.
+  const handleArchiveProject = async (project: Project) => {
+    if (!confirm(`להעביר את "${project.projectName}" לארכיון? ניתן לשחזר בהמשך.`)) return;
+    setProjects((prev) => prev.filter((p) => p.id !== project.id)); // optimistic
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived: true }),
+      });
+      if (!res.ok) throw new Error('failed');
+      toast({ title: 'הועבר לארכיון', description: project.projectName });
+    } catch {
+      toast({ title: 'שגיאה', description: 'העברה לארכיון נכשלה', variant: 'destructive' });
+      fetch('/api/projects').then((r) => r.json()).then((d) => setProjects(d.projects || [])).catch(() => {});
+    }
+  };
+
+  // Permanently delete a case (admin only) — requires typing the case name.
+  const handleDeleteProject = async (project: Project) => {
+    const typed = window.prompt(`מחיקה לצמיתות תמחק את התיק, המסמכים והיומן — ללא שחזור.\nלאישור, הקלד את שם התיק:\n"${project.projectName}"`);
+    if (typed == null) return;
+    if (typed.trim() !== project.projectName.trim()) {
+      toast({ title: 'השם לא תואם', description: 'המחיקה בוטלה', variant: 'destructive' });
+      return;
+    }
+    setProjects((prev) => prev.filter((p) => p.id !== project.id)); // optimistic
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('failed');
+      toast({ title: 'התיק נמחק לצמיתות', description: project.projectName });
+    } catch {
+      toast({ title: 'שגיאה', description: 'המחיקה נכשלה', variant: 'destructive' });
+      fetch('/api/projects').then((r) => r.json()).then((d) => setProjects(d.projects || [])).catch(() => {});
+    }
+  };
+
   const handleToggleNotifications = () => {
     setIsNotificationsOpen(!isNotificationsOpen);
     if (!isNotificationsOpen) {
@@ -290,6 +327,9 @@ function DashboardPage() {
                     onSelectProject={handleSelectProject}
                     onOpenFullCase={handleOpenFullCase}
                     onUpdateProject={handleUpdateProject}
+                    onArchiveProject={handleArchiveProject}
+                    onDeleteProject={handleDeleteProject}
+                    isAdmin={user?.role === 'admin'}
                     selectedProjectId={selectedProject?.id}
                   />
                 </TabsContent>

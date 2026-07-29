@@ -55,6 +55,8 @@ import {
   CheckCircle2,
   DollarSign,
   FileCheck,
+  Archive,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -64,6 +66,9 @@ interface AdvancedProjectTableProps {
   onSelectProject: (project: Project) => void;
   onOpenFullCase: (project: Project) => void;
   onUpdateProject?: (id: string, patch: Partial<Project>) => void;
+  onArchiveProject?: (project: Project) => void;
+  onDeleteProject?: (project: Project) => void;
+  isAdmin?: boolean;
   selectedProjectId?: string;
 }
 
@@ -83,6 +88,9 @@ export function AdvancedProjectTable({
   onSelectProject,
   onOpenFullCase,
   onUpdateProject,
+  onArchiveProject,
+  onDeleteProject,
+  isAdmin,
   selectedProjectId,
 }: AdvancedProjectTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -612,6 +620,18 @@ export function AdvancedProjectTable({
                                 מסמכי התיק
                               </Link>
                             </DropdownMenuItem>
+                            {onArchiveProject && (
+                              <DropdownMenuItem onClick={() => onArchiveProject(project)}>
+                                <Archive className="h-4 w-4 ml-2" />
+                                העבר לארכיון
+                              </DropdownMenuItem>
+                            )}
+                            {isAdmin && onDeleteProject && (
+                              <DropdownMenuItem className="text-destructive" onClick={() => onDeleteProject(project)}>
+                                <Trash2 className="h-4 w-4 ml-2" />
+                                מחק לצמיתות
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>

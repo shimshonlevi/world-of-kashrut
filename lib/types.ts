@@ -139,6 +139,7 @@ export interface Project {
   };
   needsFlightBooking: boolean;
   clientAwaitingResponse: boolean;
+  archivedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
