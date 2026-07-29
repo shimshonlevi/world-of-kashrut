@@ -379,7 +379,7 @@ export function AdvancedProjectTable({
         {/* Desktop: full table */}
         <div className="overflow-x-auto hidden md:block">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow className="bg-muted/30 hover:bg-muted/30">
                 <SortHeader field="projectName" label="פרויקט" />
                 <SortHeader field="importer" label="יבואן" />

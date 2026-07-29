@@ -91,7 +91,7 @@ export function ApprovalsView({ projects, onUpdate }: ApprovalsViewProps) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold">{scope === 'mine' ? 'לאישורי' : 'כל האישורים'}</h2>
+          <h2 className="text-xl font-semibold">{scope === 'mine' ? 'לאישורי' : 'כל האישורים'}</h2>
           <p className="text-muted-foreground">
             {pending.length > 0
               ? `${pending.length} פריטים ממתינים ${scope === 'mine' ? 'לך' : ''} ב-${byProject.length} תיקים`

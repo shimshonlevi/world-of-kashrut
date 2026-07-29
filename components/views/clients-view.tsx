@@ -107,11 +107,11 @@ export function ClientsView({ projects }: ClientsViewProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">יבואנים</h2>
-          <p className="text-muted-foreground">{rows.length} יבואנים</p>
+          <h2 className="text-xl font-semibold">יבואנים</h2>
+          <p className="text-sm text-muted-foreground">{rows.length} יבואנים</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -136,7 +136,7 @@ export function ClientsView({ projects }: ClientsViewProps) {
         <Card className="elevated border-border/60 overflow-hidden">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="text-right font-semibold">יבואן</TableHead>
                   <TableHead className="text-right font-semibold hidden md:table-cell">איש קשר</TableHead>

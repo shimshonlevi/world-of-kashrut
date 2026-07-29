@@ -75,7 +75,7 @@ export function UsersView() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold">ניהול משתמשים</h2>
+          <h2 className="text-xl font-semibold">ניהול משתמשים</h2>
           <p className="text-muted-foreground">{users.length} משתמשים · הוספה, הרשאות וסיסמאות</p>
         </div>
         <Button className="gap-2" onClick={() => setAdding(true)}>

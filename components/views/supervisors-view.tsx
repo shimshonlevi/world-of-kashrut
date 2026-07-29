@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -150,11 +151,11 @@ export function SupervisorsView({ projects }: SupervisorsViewProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">משגיחים</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl font-semibold">משגיחים</h2>
+          <p className="text-sm text-muted-foreground">
             {rows.length} משגיחים · {availableCount} זמינים לשיבוץ
           </p>
         </div>
@@ -187,143 +188,88 @@ export function SupervisorsView({ projects }: SupervisorsViewProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rows.map((sup) => {
-            const derived = sup.id.startsWith('derived-');
-            const load = sup.activeCases.length;
-            const loadTone =
-              load === 0 ? 'bg-muted text-muted-foreground' : load <= 2 ? 'bg-emerald-100 text-emerald-700' : load <= 4 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700';
-            return (
-              <Card key={sup.id} className="group hover:shadow-lg transition-all duration-200 border-border/60 hover-lift">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12 border-2 border-primary/10">
-                        <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
-                          {sup.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <CardTitle className="text-base flex items-center gap-2">
-                          {sup.name}
-                          {sup.active === false ? (
-                            <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground border-border">לא זמין</Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">זמין</Badge>
-                          )}
-                        </CardTitle>
-                        {sup.phone && (
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Phone className="h-3.5 w-3.5" />
-                            {sup.phone}
+        <Card className="elevated border-border/60 overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-card">
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="text-right font-semibold">משגיח</TableHead>
+                  <TableHead className="text-right font-semibold hidden lg:table-cell">אזורים</TableHead>
+                  <TableHead className="text-right font-semibold hidden xl:table-cell">גופי כשרות</TableHead>
+                  <TableHead className="text-right font-semibold hidden md:table-cell">זמינות</TableHead>
+                  <TableHead className="text-right font-semibold">עומס</TableHead>
+                  <TableHead className="w-10"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((sup) => {
+                  const derived = sup.id.startsWith('derived-');
+                  const load = sup.activeCases.length;
+                  const loadTone = load === 0 ? 'bg-muted text-muted-foreground' : load <= 2 ? 'bg-emerald-100 text-emerald-700' : load <= 4 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700';
+                  return (
+                    <TableRow key={sup.id} className="hover:bg-muted/40">
+                      <TableCell className="py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">{sup.name.charAt(0)}</span>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-medium truncate">{sup.name}</span>
+                              <span className={cn('h-1.5 w-1.5 rounded-full', sup.active === false ? 'bg-muted-foreground/40' : 'bg-emerald-500')} title={sup.active === false ? 'לא זמין' : 'זמין'} />
+                            </div>
+                            {sup.phone && <p className="text-[11px] text-muted-foreground truncate">{sup.phone}</p>}
                           </div>
-                        )}
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem className="gap-2" onClick={() => setEditing(derived ? { ...EMPTY, name: sup.name, phone: sup.phone } : sup)}>
-                          <Pencil className="h-4 w-4" />
-                          {derived ? 'הוסף לרשימה' : 'עריכה'}
-                        </DropdownMenuItem>
-                        {sup.phone && (
-                          <DropdownMenuItem className="gap-2" onClick={() => window.open(`https://wa.me/${sup.phone?.replace(/\D/g, '')}`, '_blank')}>
-                            <MessageCircle className="h-4 w-4" />
-                            WhatsApp
-                          </DropdownMenuItem>
-                        )}
-                        {!derived && (
-                          <DropdownMenuItem className="gap-2 text-destructive" onClick={() => remove(sup)}>
-                            <Trash2 className="h-4 w-4" />
-                            מחיקה
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {/* Workload */}
-                  <div className="flex items-center gap-2">
-                    <Badge className={cn('gap-1 border-0', loadTone)}>
-                      <Briefcase className="h-3 w-3" />
-                      {load} תיקים פעילים
-                    </Badge>
-                    {sup.totalCases > load && (
-                      <span className="text-[11px] text-muted-foreground">{sup.totalCases} סה״כ</span>
-                    )}
-                  </div>
-
-                  {/* Kosher bodies */}
-                  {chips(sup.kosherBodies).length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                      {chips(sup.kosherBodies).map((k) => (
-                        <Badge key={k} variant="secondary" className="text-[10px]">{k}</Badge>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Regions willing to take */}
-                  {chips(sup.regions).length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                      {chips(sup.regions).map((r) => (
-                        <Badge key={r} variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary">
-                          <MapPin className="h-2.5 w-2.5" />
-                          {r}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Availability / schedule */}
-                  {sup.availability && (
-                    <div className="flex items-start gap-1.5 text-xs text-muted-foreground rounded-lg bg-muted/50 px-2.5 py-2">
-                      <CalendarClock className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                      <span className="leading-relaxed">{sup.availability}</span>
-                    </div>
-                  )}
-
-                  {/* Assigned active cases */}
-                  {sup.activeCases.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {sup.activeCases.slice(0, 4).map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => router.push(`/case/${c.id}`)}
-                          className="text-[11px] rounded-md border border-border bg-muted/40 px-2 py-1 hover:border-primary/40 hover:text-primary transition-colors truncate max-w-[10rem]"
-                        >
-                          {c.projectName}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2 pt-2 border-t">
-                    <Button variant="outline" size="sm" className="flex-1 gap-2 h-9" disabled={!sup.phone} onClick={() => window.open(`tel:${sup.phone}`)}>
-                      <Phone className="h-3.5 w-3.5" />
-                      התקשר
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 gap-2 h-9 text-emerald-600" disabled={!sup.phone} onClick={() => window.open(`https://wa.me/${sup.phone?.replace(/\D/g, '')}`, '_blank')}>
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      WhatsApp
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 gap-2 h-9" disabled={!sup.email} onClick={() => window.open(`mailto:${sup.email}`)}>
-                      <Mail className="h-3.5 w-3.5" />
-                      מייל
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <div className="flex flex-wrap gap-1">
+                          {chips(sup.regions).slice(0, 2).map((r) => <Badge key={r} variant="outline" className="text-[10px] border-primary/30 text-primary">{r}</Badge>)}
+                          {chips(sup.regions).length === 0 && <span className="text-muted-foreground text-sm">—</span>}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell">
+                        <div className="flex flex-wrap gap-1">
+                          {chips(sup.kosherBodies).slice(0, 2).map((k) => <Badge key={k} variant="secondary" className="text-[10px]">{k}</Badge>)}
+                          {chips(sup.kosherBodies).length === 0 && <span className="text-muted-foreground text-sm">—</span>}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-xs text-muted-foreground max-w-[12rem] truncate">{sup.availability || '—'}</TableCell>
+                      <TableCell>
+                        <Badge className={cn('gap-1 border-0 text-[10px]', loadTone)}><Briefcase className="h-3 w-3" />{load}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem className="gap-2" onClick={() => setEditing(derived ? { ...EMPTY, name: sup.name, phone: sup.phone } : sup)}>
+                              <Pencil className="h-4 w-4" /> {derived ? 'הוסף לרשימה' : 'עריכה'}
+                            </DropdownMenuItem>
+                            {sup.phone && (
+                              <DropdownMenuItem className="gap-2" onClick={() => window.open(`https://wa.me/${sup.phone?.replace(/\D/g, '')}`, '_blank')}>
+                                <MessageCircle className="h-4 w-4 text-emerald-600" /> WhatsApp
+                              </DropdownMenuItem>
+                            )}
+                            {sup.phone && (
+                              <DropdownMenuItem className="gap-2" onClick={() => window.open(`tel:${sup.phone}`)}>
+                                <Phone className="h-4 w-4 text-blue-600" /> התקשר
+                              </DropdownMenuItem>
+                            )}
+                            {!derived && (
+                              <DropdownMenuItem className="gap-2 text-destructive" onClick={() => remove(sup)}>
+                                <Trash2 className="h-4 w-4" /> מחיקה
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
       )}
 
       {/* Add / edit dialog */}
