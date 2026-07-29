@@ -788,7 +788,7 @@ export default function CasePage() {
             {/* Overview — the case document (default) */}
             <button
               onClick={() => setActiveSection('overview')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all mb-1 ${
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all mb-0.5 ${
                 activeSection === 'overview' ? 'bg-primary text-primary-foreground shadow-sm font-medium' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
@@ -804,7 +804,7 @@ export default function CasePage() {
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all mb-1 relative ${
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all mb-0.5 relative ${
                   activeSection === item.id
                     ? 'bg-primary text-primary-foreground shadow-sm font-medium'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -953,11 +953,11 @@ export default function CasePage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="relative border-b bg-card/85 backdrop-blur-md p-4 lg:p-6 shrink-0 sticky top-0 z-20">
+        <header className="relative border-b bg-card/85 backdrop-blur-md px-4 py-3 lg:px-5 shrink-0 sticky top-0 z-20">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-1 flex-wrap">
-                <h1 className="text-xl lg:text-2xl font-semibold">{project.projectName}</h1>
+                <h1 className="text-lg lg:text-xl font-semibold">{project.projectName}</h1>
                 <Badge variant="outline" className={getStatusColor(project.status)}>
                   {project.status}
                 </Badge>
@@ -1077,7 +1077,7 @@ export default function CasePage() {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-4 lg:p-6 overflow-auto fade-up">
+        <main className="flex-1 p-4 lg:p-5 overflow-auto fade-up">
           {/* Case document overview */}
           {activeSection === 'overview' && <CaseOverview project={project} onNavigate={setActiveSection} />}
 
@@ -1085,7 +1085,7 @@ export default function CasePage() {
           {/* פרטי התיק — header + sub-section pills (one section at a time) */}
           {activeSection === 'details' && (
             <div className="max-w-4xl mb-5">
-              <h2 className="text-2xl font-bold">פרטי התיק</h2>
+              <h2 className="text-lg font-semibold">פרטי התיק</h2>
               <p className="text-sm text-muted-foreground mt-1">כל נתוני הקבע של התיק — בחר מקטע.</p>
               <div className="mt-4 flex flex-wrap items-center gap-1.5 border-b pb-3">
                 {([
@@ -1182,7 +1182,7 @@ export default function CasePage() {
             <div className="max-w-3xl space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <h2 className="text-2xl font-bold">מסמכים ודרישות</h2>
+                  <h2 className="text-lg font-semibold">מסמכים ודרישות</h2>
                   <p className="text-sm text-muted-foreground mt-1">
                     {docView === 'requirements'
                       ? 'כל המסמכים, השדות והמשימות שהתיק דורש — מלא, העלה ואשר כאן.'
@@ -1311,7 +1311,7 @@ export default function CasePage() {
           {activeSection === 'approvals' && (
             <div className="max-w-3xl space-y-3">
               <div>
-                <h2 className="text-2xl font-bold">אישורים</h2>
+                <h2 className="text-lg font-semibold">אישורים</h2>
                 <p className="text-sm text-muted-foreground mt-1">שלח כל אישור לאדם הנכון — הוא יראה אותו בתיבת "לאישורי".</p>
               </div>
               {approvalItems.length === 0 ? (
@@ -1852,7 +1852,7 @@ export default function CasePage() {
           {activeSection === 'communication' && (
             <div className="max-w-4xl mb-3 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold">תקשורת</h2>
+                <h2 className="text-lg font-semibold">תקשורת</h2>
                 <p className="text-sm text-muted-foreground mt-1">{commView === 'chat' ? 'הודעות ותקשורת עם היבואן והצוות.' : 'יומן פעילות מלא — שינויים והודעות לפי סדר כרונולוגי.'}</p>
               </div>
               <div className="inline-flex rounded-lg border bg-card p-0.5 text-sm shrink-0">

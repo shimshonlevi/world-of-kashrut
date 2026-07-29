@@ -79,7 +79,7 @@ export function CaseOverview({
   const exportToExcel = () => exportProjectCsv(project);
 
   return (
-    <div className="max-w-4xl space-y-5">
+    <div className="max-w-4xl space-y-4">
       {/* What needs work now — the first thing you see on entering the case */}
       {attention.length > 0 ? (
         <Card className="border-amber-200/70 bg-gradient-to-l from-card to-amber-50/40 elevated">
@@ -130,7 +130,7 @@ export function CaseOverview({
       {/* Header + actions */}
       <div className="flex items-center justify-between gap-3 print:hidden">
         <div>
-          <h2 className="text-xl font-bold">מסמך התיק</h2>
+          <h2 className="text-base font-semibold">מסמך התיק</h2>
           <p className="text-sm text-muted-foreground">כל פרטי הפרויקט במקום אחד — לייצוא או הדפסה</p>
         </div>
         <div className="flex items-center gap-2">
