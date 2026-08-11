@@ -6,6 +6,7 @@ import { getTemplateStages } from '@/lib/data';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -62,9 +63,7 @@ export function QuickViewDrawer({ project, isOpen, onClose }: QuickViewDrawerPro
               </SheetTitle>
               <p className="text-sm text-muted-foreground">{project.importer}</p>
             </div>
-            <Badge variant="outline" className={getStatusColor(project.status)}>
-              {project.status}
-            </Badge>
+            <StatusBadge status={project.status} />
           </div>
           <div className="flex items-center gap-2 pt-2 text-sm text-muted-foreground">
             <span className="font-mono">{project.id}</span>
