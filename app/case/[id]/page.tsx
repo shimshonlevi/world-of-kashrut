@@ -93,6 +93,7 @@ import { Document, TimelineEvent, Project, ProjectRequirement, Supervisor, ChatM
 import { RequirementItem } from '@/components/case/requirement-item';
 import { CaseOverview } from '@/components/case/case-overview';
 import { CaseDocuments } from '@/components/case/case-documents';
+import { StatusBadge } from '@/components/shared/status-badge';
 import { inferDocumentCategory } from '@/lib/documents';
 import { inferRequirementSource } from '@/lib/requirement-source';
 import { cn } from '@/lib/utils';
@@ -958,9 +959,7 @@ export default function CasePage() {
             <div>
               <div className="flex items-center gap-3 mb-1 flex-wrap">
                 <h1 className="text-lg lg:text-xl font-semibold">{project.projectName}</h1>
-                <Badge variant="outline" className={getStatusColor(project.status)}>
-                  {project.status}
-                </Badge>
+                <StatusBadge status={project.status} />
                 {deadline.tone !== 'none' && deadline.tone !== 'done' && (
                   <Badge
                     variant="outline"

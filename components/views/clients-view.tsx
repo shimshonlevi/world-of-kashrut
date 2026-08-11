@@ -32,6 +32,7 @@ import {
   Loader2,
   User,
 } from 'lucide-react';
+import { EmptyState } from '@/components/shared/empty-state';
 
 interface ClientsViewProps {
   projects: Project[];
@@ -131,7 +132,7 @@ export function ClientsView({ projects }: ClientsViewProps) {
           טוען...
         </div>
       ) : rows.length === 0 ? (
-        <Card className="border-dashed"><CardContent className="py-16 text-center text-muted-foreground">לא נמצאו יבואנים.</CardContent></Card>
+        <EmptyState icon={Building2} title="אין יבואנים עדיין" description="הוסף יבואן כדי לנהל את הלקוחות והתיקים שלהם." action={{ label: 'יבואן חדש', onClick: () => setEditing({ ...EMPTY }) }} />
       ) : (
         <Card className="elevated border-border/60 overflow-hidden">
           <div className="overflow-x-auto">

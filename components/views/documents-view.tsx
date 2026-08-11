@@ -22,6 +22,7 @@ import {
   Files,
 } from 'lucide-react';
 import { DocumentShareMenu } from '@/components/case/document-share-menu';
+import { EmptyState } from '@/components/shared/empty-state';
 import { cn } from '@/lib/utils';
 
 interface DocumentsViewProps {
@@ -166,12 +167,7 @@ export function DocumentsView({ projects }: DocumentsViewProps) {
           טוען...
         </div>
       ) : folders.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-16 text-center text-muted-foreground">
-            <Files className="h-10 w-10 mx-auto mb-3 opacity-40" />
-            {docs.length === 0 ? 'עדיין לא הועלו מסמכים למערכת.' : 'לא נמצאו מסמכים תואמים.'}
-          </CardContent>
-        </Card>
+        <EmptyState icon={Files} title={docs.length === 0 ? 'עדיין לא הועלו מסמכים' : 'לא נמצאו מסמכים תואמים'} description={docs.length === 0 ? 'מסמכים שיועלו בתיקים יופיעו כאן, מסודרים לפי פרויקט.' : undefined} />
       ) : (
         <div className="space-y-4">
           {folders.map(({ projectId, items }) => {

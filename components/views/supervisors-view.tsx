@@ -36,6 +36,7 @@ import {
   Trash2,
   Globe,
 } from 'lucide-react';
+import { EmptyState } from '@/components/shared/empty-state';
 import { cn } from '@/lib/utils';
 
 interface SupervisorsViewProps {
@@ -181,12 +182,7 @@ export function SupervisorsView({ projects }: SupervisorsViewProps) {
           טוען...
         </div>
       ) : rows.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-16 text-center text-muted-foreground">
-            <ShieldCheck className="h-10 w-10 mx-auto mb-3 opacity-40" />
-            אין משגיחים עדיין. הוסף משגיח כדי לנהל לו״ז ושיבוצים.
-          </CardContent>
-        </Card>
+        <EmptyState icon={ShieldCheck} title="אין משגיחים עדיין" description="הוסף משגיח כדי לנהל לו״ז ושיבוצים." action={{ label: 'משגיח חדש', onClick: () => setEditing({ ...EMPTY }) }} />
       ) : (
         <Card className="elevated border-border/60 overflow-hidden">
           <div className="overflow-x-auto">

@@ -58,8 +58,11 @@ import {
   FileCheck,
   Archive,
   Trash2,
+  FolderKanban,
 } from 'lucide-react';
 import Link from 'next/link';
+import { StatusBadge } from '@/components/shared/status-badge';
+import { EmptyState } from '@/components/shared/empty-state';
 import { cn } from '@/lib/utils';
 
 interface AdvancedProjectTableProps {
@@ -257,15 +260,7 @@ export function AdvancedProjectTable({
   const selectedProjects = filteredAndSortedProjects.filter((p) => selectedRows.has(p.id));
 
   if (projects.length === 0) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="py-16 text-center">
-          <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
-          <p className="text-lg font-medium text-muted-foreground">אין תיקים להצגה</p>
-          <p className="text-sm text-muted-foreground/70 mt-1">צור תיק חדש כדי להתחיל</p>
-        </CardContent>
-      </Card>
-    );
+    return <EmptyState icon={FolderKanban} title="אין תיקים להצגה" description="צור תיק חדש כדי להתחיל לעבוד." />;
   }
 
   return (
@@ -353,10 +348,7 @@ export function AdvancedProjectTable({
                       {project.importer} · {project.country}
                     </p>
                   </div>
-                  <Badge className={cn('shrink-0 gap-1 border-0', statusConfig.bg, statusConfig.text)}>
-                    <span className={cn('h-1.5 w-1.5 rounded-full', statusConfig.dot)} />
-                    {project.status}
-                  </Badge>
+                  <StatusBadge status={project.status} className="shrink-0" />
                 </div>
 
                 {/* Progress */}
@@ -519,10 +511,7 @@ export function AdvancedProjectTable({
                           </SelectContent>
                         </Select>
                       ) : (
-                        <Badge className={`${statusConfig.bg} ${statusConfig.text} border-0 gap-1.5`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${statusConfig.dot}`} />
-                          {project.status}
-                        </Badge>
+                        <StatusBadge status={project.status} />
                       )}
                     </TableCell>
 

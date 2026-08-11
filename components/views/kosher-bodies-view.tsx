@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Search, Plus, Phone, Mail, MoreHorizontal, Pencil, Loader2, BadgeCheck, Trash2 } from 'lucide-react';
+import { EmptyState } from '@/components/shared/empty-state';
 import { cn } from '@/lib/utils';
 
 interface KosherBodiesViewProps {
@@ -119,10 +120,7 @@ export function KosherBodiesView({ projects }: KosherBodiesViewProps) {
           <Loader2 className="h-6 w-6 animate-spin ml-2" /> טוען...
         </div>
       ) : rows.length === 0 ? (
-        <Card className="border-dashed"><CardContent className="py-16 text-center text-muted-foreground">
-          <BadgeCheck className="h-9 w-9 mx-auto mb-3 opacity-40" />
-          אין גופי כשרות עדיין. הוסף גוף כשרות לניהול השיבוצים.
-        </CardContent></Card>
+        <EmptyState icon={BadgeCheck} title="אין גופי כשרות עדיין" description="הוסף גוף כשרות לניהול השיבוצים." action={{ label: 'גוף כשרות חדש', onClick: () => setEditing({ ...EMPTY }) }} />
       ) : (
         <Card className="elevated border-border/60 overflow-hidden">
           <div className="overflow-x-auto">
