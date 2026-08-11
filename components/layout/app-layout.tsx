@@ -136,17 +136,17 @@ export function AppLayout({
   const SidebarContent = () => (
     <>
       {/* Logo */}
-      <div className="p-5 border-b border-border/50">
+      <div className="p-4 border-b border-sidebar-border">
         <BrandLockup size="md" />
       </div>
 
       {/* Search */}
-      <div className="p-4">
+      <div className="p-3">
         <div className="relative">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="חיפוש תיק, יבואן..." 
-            className="pr-9 bg-muted/50 border-0 focus-visible:ring-1 h-10"
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-sidebar-foreground/50" />
+          <Input
+            placeholder="חיפוש תיק, יבואן..."
+            className="pr-9 h-9 bg-sidebar-accent/60 border-0 text-sidebar-foreground placeholder:text-sidebar-foreground/40 focus-visible:ring-1 focus-visible:ring-sidebar-ring"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -155,7 +155,7 @@ export function AppLayout({
 
       {/* Navigation */}
       <nav className="flex-1 min-h-0 px-3 space-y-1 overflow-y-auto">
-        <p className="px-3 py-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <p className="px-3 py-2 text-[11px] font-semibold text-sidebar-foreground/45 uppercase tracking-wider">
           תפריט ראשי
         </p>
         {navItems.map((item) => {
@@ -168,15 +168,15 @@ export function AppLayout({
                   <button
                     onClick={() => handleNavClick(item.id)}
                     className={cn(
-                      'flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                      'relative flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors',
                       isActive
-                        ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
                     )}
                   >
-                    <item.icon className={cn('h-5 w-5', isActive && 'drop-shadow-sm')} />
+                    {isActive && <span className="absolute right-0 h-5 w-0.5 rounded-l bg-sidebar-primary" />}
+                    <item.icon className="h-[18px] w-[18px]" />
                     <span className="flex-1 text-right">{item.label}</span>
-                    {isActive && <ChevronRight className="h-4 w-4 animate-in slide-in-from-right-2" />}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="left" className="text-xs">
@@ -189,14 +189,14 @@ export function AppLayout({
       </nav>
 
       {/* Quick Stats */}
-      <div className="p-4 border-t border-border/50">
-        <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+      <div className="p-3 border-t border-sidebar-border">
+        <div className="bg-sidebar-accent/50 rounded-lg p-3 space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground flex items-center gap-1.5">
+            <span className="text-sidebar-foreground/60 flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
               שעה נוכחית
             </span>
-            <span className="font-mono font-semibold">{currentTime}</span>
+            <span className="font-mono font-semibold text-sidebar-foreground">{currentTime}</span>
           </div>
           {alertCount > 0 && (
             <div className="flex items-center justify-between text-sm">
@@ -211,34 +211,30 @@ export function AppLayout({
       </div>
 
       {/* Quick Actions */}
-      <div className="p-4 border-t border-border/50">
-        <Button 
-          onClick={onNewProject} 
-          className="w-full gap-2 shadow-md h-11"
-          size="lg"
-        >
+      <div className="p-3 border-t border-sidebar-border">
+        <Button onClick={onNewProject} className="w-full gap-2 h-10">
           <Plus className="h-4 w-4" />
           פרויקט חדש
         </Button>
       </div>
 
       {/* User */}
-      <div className="p-4 border-t border-border/50">
+      <div className="p-3 border-t border-sidebar-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-muted/80 transition-colors text-right group">
-              <Avatar className="h-10 w-10 border-2 border-primary/20 group-hover:border-primary/40 transition-colors">
-                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary font-semibold">
+            <button className="flex items-center gap-3 w-full p-2 rounded-md hover:bg-sidebar-accent/60 transition-colors text-right group">
+              <Avatar className="h-9 w-9 border border-sidebar-border">
+                <AvatarFallback className="bg-sidebar-primary/20 text-sidebar-foreground font-semibold text-sm">
                   {user?.avatar || 'מש'}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">{user?.name}</p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-sm font-semibold truncate text-sidebar-foreground">{user?.name}</p>
+                <p className="text-[11px] text-sidebar-foreground/55">
                   {user?.role === 'admin' ? 'מנהל מערכת' : 'מזכירה'}
                 </p>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground rotate-90" />
+              <ChevronRight className="h-4 w-4 text-sidebar-foreground/50 rotate-90" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">

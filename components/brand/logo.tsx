@@ -32,8 +32,8 @@ export function BrandLockup({ className, size = 'md', subtitle = true }: BrandLo
     <div className={cn('flex items-center gap-3', className)}>
       <BrandMark className={cn(s.mark, 'rounded-xl shadow-sm ring-1 ring-border/60')} />
       <div className="leading-tight">
-        <h1 className={cn('font-bold tracking-tight', s.title)}>World of Kashrut</h1>
-        {subtitle && <p className={cn('text-muted-foreground', s.sub)}>עולם הכשרות · ניהול תיקי כשרות</p>}
+        <h1 className={cn('font-bold tracking-tight text-current', s.title)}>World of Kashrut</h1>
+        {subtitle && <p className={cn('opacity-60', s.sub)}>עולם הכשרות · ניהול תיקי כשרות</p>}
       </div>
     </div>
   );
