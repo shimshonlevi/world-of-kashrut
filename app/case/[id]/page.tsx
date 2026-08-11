@@ -1243,14 +1243,20 @@ export default function CasePage() {
               {/* Grouped by who provides it — the daily working view */}
               {docView === 'requirements' && reqGroupBy === 'source' && requirementsBySource.map((group) => {
                 const done = group.items.filter(({ req }) => isRequirementSatisfied(req)).length;
+                const pct = group.items.length ? Math.round((done / group.items.length) * 100) : 0;
                 return (
                   <div key={group.key} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex items-end justify-between gap-3">
+                      <div className="min-w-0">
                         <h3 className="text-sm font-semibold">{group.label}</h3>
                         <p className="text-[11px] text-muted-foreground">{group.hint}</p>
                       </div>
-                      <span className="text-xs text-muted-foreground tabular-nums shrink-0">{done}/{group.items.length}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+                          <div className={cn('h-full rounded-full transition-all duration-500', pct === 100 ? 'bg-emerald-500' : 'bg-primary')} style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="text-xs text-muted-foreground tabular-nums">{done}/{group.items.length}</span>
+                      </div>
                     </div>
                     {group.items.map(({ stage, req }) => (
                       <RequirementItem
@@ -1270,11 +1276,18 @@ export default function CasePage() {
               })}
 
               {/* Grouped by the template's requirement groups — shows where each item is defined */}
-              {docView === 'requirements' && reqGroupBy === 'stage' && requirementGroups.map(({ stage, items }) => (
+              {docView === 'requirements' && reqGroupBy === 'stage' && requirementGroups.map(({ stage, items }) => {
+                const pct = stageProgress(stage);
+                return (
                 <div key={stage.id} className="space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <h3 className="text-sm font-semibold">{stage.name}</h3>
-                    <span className="text-xs text-muted-foreground tabular-nums">{stageProgress(stage)}%</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+                        <div className={cn('h-full rounded-full transition-all duration-500', pct === 100 ? 'bg-emerald-500' : 'bg-primary')} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="text-xs text-muted-foreground tabular-nums">{pct}%</span>
+                    </div>
                   </div>
                   {items.map((req) => (
                     <RequirementItem
@@ -1289,7 +1302,8 @@ export default function CasePage() {
                     />
                   ))}
                 </div>
-              ))}
+                );
+              })}
 
               {/* Where these requirements come from */}
               {docView === 'requirements' && requirementGroups.length > 0 && project.templateId && (

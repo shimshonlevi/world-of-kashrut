@@ -128,18 +128,23 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
     }
   };
 
+  const needsAction = req.required && !satisfied && req.status !== 'submitted' && req.status !== 'rejected';
   return (
     <div
       className={cn(
         'relative overflow-hidden rounded-lg border px-3 py-2.5 transition-all',
-        satisfied ? 'border-emerald-200 bg-emerald-50/40' : req.status === 'rejected' ? 'border-red-200 bg-red-50/40' : req.status === 'submitted' ? 'border-amber-200 bg-amber-50/30' : 'bg-card hover:border-primary/30 hover:shadow-sm'
+        satisfied ? 'border-emerald-200 bg-emerald-50/40'
+          : req.status === 'rejected' ? 'border-red-200 bg-red-50/40'
+          : req.status === 'submitted' ? 'border-amber-200 bg-amber-50/30'
+          : needsAction ? 'border-amber-200/70 bg-amber-50/20 hover:border-amber-300'
+          : 'bg-card hover:border-primary/30 hover:shadow-sm'
       )}
     >
       {/* status accent on the start (right in RTL) edge */}
       <span
         className={cn(
           'absolute inset-y-0 right-0 w-1',
-          satisfied ? 'bg-emerald-400' : req.status === 'rejected' ? 'bg-red-400' : req.status === 'submitted' ? 'bg-amber-400' : 'bg-transparent'
+          satisfied ? 'bg-emerald-400' : req.status === 'rejected' ? 'bg-red-400' : req.status === 'submitted' ? 'bg-amber-400' : needsAction ? 'bg-amber-300' : 'bg-transparent'
         )}
       />
       <div className="flex items-start gap-2.5">
