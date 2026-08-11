@@ -39,6 +39,7 @@ export function NewProjectWizard({ isOpen, onClose, onCreateProject, defaultResp
   const [templates, setTemplates] = useState<WorkflowTemplate[]>([]);
   const [importers, setImporters] = useState<Importer[]>([]);
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
+  const [kosherBodies, setKosherBodies] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Inline "new importer" creation — keeps the importers registry in sync when
@@ -70,6 +71,7 @@ export function NewProjectWizard({ isOpen, onClose, onCreateProject, defaultResp
     fetchTemplates().then(setTemplates).catch(() => {});
     fetch('/api/importers').then((r) => r.json()).then((d) => setImporters(d.importers || [])).catch(() => {});
     fetch('/api/supervisors').then((r) => r.json()).then((d) => setSupervisors(d.supervisors || [])).catch(() => {});
+    fetch('/api/kosher-bodies').then((r) => r.json()).then((d) => setKosherBodies((d.kosherBodies || []).map((k: { name: string }) => k.name))).catch(() => {});
   }, [isOpen, defaultResponsible]);
 
   const selectedTemplate = useMemo(() => templates.find((t) => t.id === templateId), [templates, templateId]);
@@ -257,7 +259,10 @@ export function NewProjectWizard({ isOpen, onClose, onCreateProject, defaultResp
               </div>
               <div className="space-y-1.5">
                 <Label>גוף כשרות</Label>
-                <Input value={form.kosherBody} onChange={(e) => setForm({ ...form, kosherBody: e.target.value })} placeholder="WK / בית יוסף / ..." />
+                <Input list="kosher-body-list" value={form.kosherBody} onChange={(e) => setForm({ ...form, kosherBody: e.target.value })} placeholder="בחר מהרשימה או הקלד" />
+                <datalist id="kosher-body-list">
+                  {kosherBodies.map((k) => <option key={k} value={k} />)}
+                </datalist>
               </div>
               <div className="space-y-1.5">
                 <Label>משגיח</Label>

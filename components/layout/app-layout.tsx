@@ -42,6 +42,7 @@ import {
   ShieldCheck,
   BadgeCheck,
   Files,
+  Award,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/components/auth-provider';
@@ -69,6 +70,7 @@ const navItems = [
   { id: 'projects', label: 'תיקים', icon: FolderKanban, description: 'ניהול תיקים' },
   { id: 'clients', label: 'יבואנים', icon: Users, description: 'רשימת לקוחות' },
   { id: 'supervisors', label: 'משגיחים', icon: ShieldCheck, description: 'רשימת משגיחים ולו״ז' },
+  { id: 'kosher-bodies', label: 'גופי כשרות', icon: Award, description: 'ניהול גופי הכשרות' },
   { id: 'trips', label: 'נסיעות', icon: Plane, description: 'לוגיסטיקה וטיסות' },
   { id: 'approvals', label: 'אישורים', icon: BadgeCheck, description: 'אישורי מסמכים וגורמים' },
   { id: 'documents', label: 'מסמכים', icon: Files, description: 'כל המסמכים לפי תיקים' },
@@ -96,6 +98,19 @@ export function AppLayout({
   const [pwOpen, setPwOpen] = useState(false);
   const [newPw, setNewPw] = useState('');
   const [savingPw, setSavingPw] = useState(false);
+  // At-a-glance counts next to nav items (like a real CRM console).
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  useEffect(() => {
+    const grab = (url: string, key: string, field: string) =>
+      fetch(url).then((r) => r.json()).then((d) => ({ key, n: (d[field] || []).length })).catch(() => ({ key, n: 0 }));
+    Promise.all([
+      grab('/api/projects', 'projects', 'projects'),
+      grab('/api/importers', 'clients', 'importers'),
+      grab('/api/supervisors', 'supervisors', 'supervisors'),
+      grab('/api/kosher-bodies', 'kosher-bodies', 'kosherBodies'),
+      grab('/api/templates', 'templates', 'templates'),
+    ]).then((res) => setCounts(Object.fromEntries(res.map((r) => [r.key, r.n]))));
+  }, []);
 
   const changeOwnPassword = async () => {
     if (!user?.id || newPw.length < 3) return;
@@ -177,6 +192,11 @@ export function AppLayout({
                     {isActive && <span className="absolute right-0 h-5 w-0.5 rounded-l bg-sidebar-primary" />}
                     <item.icon className="h-[18px] w-[18px]" />
                     <span className="flex-1 text-right">{item.label}</span>
+                    {counts[item.id] != null && counts[item.id] > 0 && (
+                      <span className={cn('text-[11px] tabular-nums rounded px-1.5 py-0.5', isActive ? 'bg-sidebar-primary/25 text-sidebar-accent-foreground' : 'text-sidebar-foreground/45')}>
+                        {counts[item.id]}
+                      </span>
+                    )}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="left" className="text-xs">

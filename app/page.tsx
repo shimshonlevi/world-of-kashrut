@@ -26,6 +26,7 @@ import { ClientsView } from '@/components/views/clients-view';
 import { ReportsView } from '@/components/views/reports-view';
 import { TripsView } from '@/components/views/trips-view';
 import { SupervisorsView } from '@/components/views/supervisors-view';
+import { KosherBodiesView } from '@/components/views/kosher-bodies-view';
 import { ApprovalsView } from '@/components/views/approvals-view';
 import { DocumentsView } from '@/components/views/documents-view';
 import { ProjectsView } from '@/components/views/projects-view';
@@ -397,6 +398,10 @@ function DashboardPage() {
 
         {currentPage === 'supervisors' && (
           <SupervisorsView projects={userProjects} />
+        )}
+
+        {currentPage === 'kosher-bodies' && (
+          <KosherBodiesView projects={userProjects} />
         )}
 
         {currentPage === 'trips' && (

@@ -182,6 +182,19 @@ export interface Importer {
   updatedAt?: string;
 }
 
+export interface KosherBody {
+  id: string;
+  name: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  region?: string;
+  notes?: string;
+  active?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Supervisor {
   id: string;
   name: string;

@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   BadgeCheck,
   Files,
+  Award,
 } from 'lucide-react';
 
 const NAV = [
@@ -34,6 +35,7 @@ const NAV = [
   { id: 'projects', label: 'תיקים', icon: FolderKanban, path: '/?page=projects' },
   { id: 'clients', label: 'יבואנים', icon: Users, path: '/?page=clients' },
   { id: 'supervisors', label: 'משגיחים', icon: ShieldCheck, path: '/?page=supervisors' },
+  { id: 'kosher-bodies', label: 'גופי כשרות', icon: Award, path: '/?page=kosher-bodies' },
   { id: 'trips', label: 'נסיעות', icon: Plane, path: '/?page=trips' },
   { id: 'approvals', label: 'אישורים', icon: BadgeCheck, path: '/?page=approvals' },
   { id: 'documents', label: 'מסמכים', icon: Files, path: '/?page=documents' },
