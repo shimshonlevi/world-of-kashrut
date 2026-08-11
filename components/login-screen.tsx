@@ -35,15 +35,15 @@ export function LoginScreen() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-background">
-      <div className="pointer-events-none absolute -top-32 right-1/2 translate-x-1/2 h-[28rem] w-[28rem] rounded-full bg-gold/15 blur-[120px]" />
-      <div className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-primary/10 blur-[100px]" />
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-sidebar text-sidebar-foreground">
+      <div className="pointer-events-none absolute -top-32 right-1/2 translate-x-1/2 h-[28rem] w-[28rem] rounded-full bg-sidebar-primary/20 blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-sidebar-primary/15 blur-[100px]" />
 
       <div className="relative w-full max-w-md">
         <div className="flex flex-col items-center mb-8 text-center">
-          <BrandMark className="h-20 w-20 rounded-2xl shadow-xl ring-1 ring-border/60 mb-5" />
-          <h1 className="text-3xl font-bold tracking-tight">World of Kashrut</h1>
-          <p className="text-muted-foreground mt-1.5">עולם הכשרות · מערכת ניהול תיקי כשרות</p>
+          <BrandMark className="h-20 w-20 rounded-2xl shadow-xl ring-1 ring-white/10 mb-5" />
+          <h1 className="text-3xl font-bold tracking-tight text-current">World of Kashrut</h1>
+          <p className="opacity-70 mt-1.5">עולם הכשרות · מערכת ניהול תיקי כשרות</p>
         </div>
 
         <Card className="border-border/60 bg-card/90 backdrop-blur-sm elevated">

@@ -72,6 +72,14 @@ function StatusBadge({ status }: { status: ProjectRequirement['status'] }) {
   );
 }
 
+function SavedTag() {
+  return (
+    <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-600 animate-in fade-in">
+      <Check className="h-3 w-3" /> נשמר
+    </span>
+  );
+}
+
 interface RequirementItemProps {
   requirement: ProjectRequirement;
   onUpdate: (patch: Partial<ProjectRequirement>) => void;
@@ -94,16 +102,20 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
   const [uploading, setUploading] = useState(false);
   const [editingLabel, setEditingLabel] = useState(false);
   const [labelDraft, setLabelDraft] = useState(req.label);
+  const [justSaved, setJustSaved] = useState(false);
 
   useEffect(() => setDraft(req.value ?? ''), [req.value]);
   useEffect(() => setLabelDraft(req.label), [req.label]);
 
   const satisfied = req.status === 'approved' || req.status === 'done';
 
+  const flashSaved = () => { setJustSaved(true); setTimeout(() => setJustSaved(false), 1600); };
+
   const commitValue = () => {
     const value = draft.trim();
     if (value === (req.value ?? '')) return;
     onUpdate({ value, status: value ? 'done' : 'pending' });
+    flashSaved();
   };
 
   const handleFile = async (file: File | undefined) => {
@@ -213,18 +225,24 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
           )}
 
           {req.type === 'question' && (
-            <Textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onBlur={commitValue}
-              placeholder="כתוב את התשובה כאן..."
-              rows={2}
-              className="text-sm"
-            />
+            <div className="space-y-1">
+              <Textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onBlur={commitValue}
+                placeholder="כתוב את התשובה כאן..."
+                rows={2}
+                className="text-sm"
+              />
+              {justSaved && <SavedTag />}
+            </div>
           )}
 
           {req.type === 'field' && (
-            <FieldInput req={req} draft={draft} setDraft={setDraft} commit={commitValue} onUpdate={onUpdate} />
+            <div className="space-y-1">
+              <FieldInput req={req} draft={draft} setDraft={setDraft} commit={commitValue} onUpdate={onUpdate} />
+              {justSaved && <SavedTag />}
+            </div>
           )}
 
           {req.type === 'document' && (
