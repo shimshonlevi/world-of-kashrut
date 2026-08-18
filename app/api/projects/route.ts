@@ -89,6 +89,17 @@ export async function POST(request: Request) {
       }
     }
 
+    // Link master data by id (name stays as the display snapshot). Best-effort:
+    // if the name isn't in the registry yet, the id is simply left null.
+    const [imp, sup, kb] = await Promise.all([
+      body.importer ? prisma.importer.findUnique({ where: { name: String(body.importer).trim() }, select: { id: true } }) : null,
+      body.supervisor ? prisma.supervisor.findUnique({ where: { name: String(body.supervisor).trim() }, select: { id: true } }) : null,
+      body.kosherBody ? prisma.kosherBody.findUnique({ where: { name: String(body.kosherBody).trim() }, select: { id: true } }) : null,
+    ]);
+    if (imp) body.importerId = imp.id;
+    if (sup) body.supervisorId = sup.id;
+    if (kb) body.kosherBodyId = kb.id;
+
     const data = serializeProjectForDb(body);
     const project = await prisma.project.create({ data });
 

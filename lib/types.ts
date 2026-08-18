@@ -103,6 +103,10 @@ export interface Project {
   status: ProjectStatus;
   currentStage: string;
   templateId?: string;
+  // FK links to master data (the name strings above are the display snapshot).
+  importerId?: string | null;
+  supervisorId?: string | null;
+  kosherBodyId?: string | null;
   // Snapshot of the template's stages + per-requirement progress.
   // Single source of truth for the case side-menu and progress stepper.
   stages?: ProjectStage[];

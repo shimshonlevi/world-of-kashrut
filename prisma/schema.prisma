@@ -25,6 +25,14 @@ model Project {
   status                  String
   currentStage            String
   templateId              String?
+  // Real relations to master data. The name strings above stay as a snapshot
+  // (history + convenient display); these link by id for integrity + joins.
+  importerId              String?
+  importerRef             Importer?   @relation(fields: [importerId], references: [id], onDelete: SetNull)
+  supervisorId            String?
+  supervisorRef           Supervisor? @relation(fields: [supervisorId], references: [id], onDelete: SetNull)
+  kosherBodyId            String?
+  kosherBodyRef           KosherBody? @relation(fields: [kosherBodyId], references: [id], onDelete: SetNull)
   stages                  String   @default("[]")
   enabledTools            String   @default("[]")
   reportReceived          Boolean  @default(false)
@@ -56,7 +64,9 @@ model Project {
   @@index([responsible])
   @@index([archivedAt])
   @@index([status])
-  @@index([currentStage])
+  @@index([importerId])
+  @@index([supervisorId])
+  @@index([kosherBodyId])
 }
 
 model Template {
@@ -94,15 +104,16 @@ model User {
 }
 
 model Importer {
-  id            String   @id @default(cuid())
-  name          String   @unique
+  id            String    @id @default(cuid())
+  name          String    @unique
   contactPerson String?
   phone         String?
   email         String?
   country       String?
   notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  projects      Project[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model KosherBody {
@@ -113,9 +124,10 @@ model KosherBody {
   email         String?
   region        String? // where they certify
   notes         String?
-  active        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  active        Boolean   @default(true)
+  projects      Project[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Supervisor {
@@ -126,10 +138,11 @@ model Supervisor {
   kosherBodies String?
   regions      String? // areas/countries the supervisor is willing to travel to (comma-separated)
   availability String? // free-text schedule / לו״ז (e.g. "פנוי מ-15/8", "לא זמין באוגוסט")
-  active       Boolean  @default(true) // currently taking assignments
+  active       Boolean   @default(true) // currently taking assignments
   notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  projects     Project[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model AuditLog {
