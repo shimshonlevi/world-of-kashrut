@@ -51,7 +51,6 @@ export function exportProjectCsv(project: Project) {
     ['סוג כשרות', project.kosherBody],
     ['אחראי/ת', project.responsible],
     ['סטטוס', project.status],
-    ['שלב נוכחי', project.currentStage],
     ['התקדמות', `${progress}%`],
     ['תאריך התחלה', project.startDate],
     ['תאריך יעד', project.endDate],

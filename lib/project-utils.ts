@@ -34,7 +34,7 @@ function parseJson<T>(value: string | null | undefined, fallback: T): T {
 const PROJECT_COLUMNS = new Set<string>([
   'responsible', 'projectName', 'importer', 'importerPhone', 'importerEmail',
   'country', 'startDate', 'endDate', 'kosherBody', 'supervisor', 'supervisorPhone',
-  'factoryName', 'factoryAddress', 'status', 'currentStage', 'templateId',
+  'factoryName', 'factoryAddress', 'status', 'templateId',
   'importerId', 'supervisorId', 'kosherBodyId', 'stages',
   'reportReceived', 'reportPhoto', 'sentToChaim', 'sentToKosherBody', 'certReceived',
   'submittedToRabbinate', 'submittedForPayment', 'paid',

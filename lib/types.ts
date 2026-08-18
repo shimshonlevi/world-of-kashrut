@@ -101,7 +101,6 @@ export interface Project {
   factoryName: string;
   factoryAddress: string;
   status: ProjectStatus;
-  currentStage: string;
   templateId?: string;
   // FK links to master data (the name strings above are the display snapshot).
   importerId?: string | null;

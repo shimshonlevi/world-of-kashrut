@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Project, WORKFLOW_STAGES } from '@/lib/types';
-import { getTemplateStages } from '@/lib/data';
+import { Project } from '@/lib/types';
+import { overallProgress } from '@/lib/templates';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,11 +34,7 @@ export function QuickViewDrawer({ project, isOpen, onClose }: QuickViewDrawerPro
 
   if (!project) return null;
 
-  const stages = project.templateId ? getTemplateStages(project.templateId) : [];
-  const stageNames = stages.length > 0 
-    ? stages.map(s => s.name) 
-    : WORKFLOW_STAGES;
-  const currentStageIndex = stageNames.indexOf(project.currentStage);
+  const progress = overallProgress(project.stages ?? []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -96,37 +92,12 @@ export function QuickViewDrawer({ project, isOpen, onClose }: QuickViewDrawerPro
 
             {/* Progress */}
             <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-4">התקדמות</h4>
-              <div className="flex items-center gap-2">
-                {stageNames.map((stage, index) => (
-                  <div key={stage} className="flex items-center flex-1">
-                    <div className="flex flex-col items-center flex-1">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                          index < currentStageIndex
-                            ? 'bg-emerald-500 text-white'
-                            : index === currentStageIndex
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {index < currentStageIndex ? (
-                          <CheckCircle2 className="h-4 w-4" />
-                        ) : (
-                          <Circle className="h-4 w-4" />
-                        )}
-                      </div>
-                      <span className="text-[10px] mt-1 text-muted-foreground">{stage}</span>
-                    </div>
-                    {index < stageNames.length - 1 && (
-                      <div
-                        className={`h-0.5 flex-1 mx-1 ${
-                          index < currentStageIndex ? 'bg-emerald-500' : 'bg-muted'
-                        }`}
-                      />
-                    )}
-                  </div>
-                ))}
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium text-muted-foreground">התקדמות התיק</h4>
+                <span className="text-sm font-semibold tabular-nums">{progress}%</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div className={`h-full rounded-full transition-all duration-500 ${progress === 100 ? 'bg-emerald-500' : 'bg-primary'}`} style={{ width: `${progress}%` }} />
               </div>
             </div>
 

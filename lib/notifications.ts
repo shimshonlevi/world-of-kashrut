@@ -100,8 +100,8 @@ function eventFires(event: NotificationEvent, project: Project, rule: Notificati
     case 'client_awaiting':
       return Boolean(project.clientAwaitingResponse);
     case 'missing_report':
-      // A production/report stage is active but no report received yet.
-      return !project.reportReceived && (project.currentStage?.includes('ייצור') || project.currentStage?.includes('דו'));
+      // Report still not received on an active case.
+      return !project.reportReceived && project.status !== 'הסתיים';
     case 'document_rejected':
       return (project.stages ?? []).some((s) => s.requirements.some((r) => r.type === 'document' && r.status === 'rejected'));
     case 'awaiting_payment':

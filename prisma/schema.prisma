@@ -23,7 +23,6 @@ model Project {
   factoryName             String
   factoryAddress          String
   status                  String
-  currentStage            String   @default("")
   templateId              String?
   // Real relations to master data. The name strings above stay as a snapshot
   // (history + convenient display); these link by id for integrity + joins.

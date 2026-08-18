@@ -59,10 +59,10 @@ export function ReportsView({ projects }: ReportsViewProps) {
   const exportProjects = () => {
     downloadCsv(
       `תיקים-${new Date().toISOString().split('T')[0]}`,
-      ['מזהה', 'פרויקט', 'יבואן', 'מדינה', 'סוג כשרות', 'אחראי', 'סטטוס', 'שלב', 'התקדמות%', 'יעד', 'הצעת מחיר', 'הוצאות', 'שולם'],
+      ['מזהה', 'פרויקט', 'יבואן', 'מדינה', 'סוג כשרות', 'אחראי', 'סטטוס', 'התקדמות%', 'יעד', 'הצעת מחיר', 'הוצאות', 'שולם'],
       projects.map((p) => [
         p.id, p.projectName, p.importer, p.country, p.kosherBody, p.responsible, p.status,
-        p.currentStage, p.stages?.length ? overallProgress(p.stages) : 0, p.endDate,
+        p.stages?.length ? overallProgress(p.stages) : 0, p.endDate,
         p.quotedPrice || 0, p.actualExpenses || 0, p.paid ? 'כן' : 'לא',
       ])
     );

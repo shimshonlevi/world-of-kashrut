@@ -30,7 +30,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     });
 
     // Log audit entry for important changes
-    const auditChanges = ['status', 'currentStage', 'reportReceived', 'paid'];
+    const auditChanges = ['status', 'reportReceived', 'paid'];
     for (const field of auditChanges) {
       const oldVal = (oldProject as any)[field];
       const newVal = (updates as any)[field];
