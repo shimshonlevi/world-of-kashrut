@@ -289,13 +289,11 @@ function DashboardPage() {
   const dashboardBody = (
     <div className="space-y-4">
       <KPICards stats={stats} onNavigate={setCurrentPage} />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <ActionCenter projects={userProjects} onOpenCase={openCase} />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 items-start">
+        <ActionCenter projects={userProjects} onOpenCase={openCase} />
         <div className="space-y-4">
           <ApprovalsPreview projects={projects} userName={user?.name} onOpenAll={() => setCurrentPage('approvals')} onOpenCase={openCase} />
-          <MessagesInbox projects={userProjects} />
+          <MessagesInbox projects={userProjects} limit={3} onOpenAll={() => setCurrentPage('projects')} />
         </div>
       </div>
       <RecentCasesTable projects={userProjects} onOpenCase={openCase} onOpenAll={() => setCurrentPage('projects')} />
