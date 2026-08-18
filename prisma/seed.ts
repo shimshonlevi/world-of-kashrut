@@ -65,19 +65,63 @@ async function main() {
     })
   }
 
-  // ---- Projects ----
-  // Map each mock project to a default template (by kosher category) and snapshot
-  // its stages, so the seeded data exercises the new requirement-driven workflow.
+  // ---- Master data FIRST, so projects can link to it by id ----
+  const importerId = new Map<string, string>()
+  const supervisorId = new Map<string, string>()
+  const kosherBodyId = new Map<string, string>()
+
+  // Importers (derived from the mock projects)
+  await prisma.importer.deleteMany()
+  const impSeen = new Map<string, { phone?: string; email?: string; country?: string }>()
+  for (const p of mockProjects) {
+    if (p.importer && !impSeen.has(p.importer)) impSeen.set(p.importer, { phone: p.importerPhone, email: p.importerEmail, country: p.country })
+  }
+  for (const [name, v] of impSeen) {
+    const row = await prisma.importer.create({ data: { name, phone: v.phone ?? null, email: v.email ?? null, country: v.country ?? null } })
+    importerId.set(name, row.id)
+  }
+
+  // Kosher bodies (derived from the mock projects)
+  await prisma.kosherBody.deleteMany()
+  for (const name of new Set(mockProjects.map((p) => (p.kosherBody || '').trim()).filter(Boolean))) {
+    const row = await prisma.kosherBody.create({ data: { name } })
+    kosherBodyId.set(name, row.id)
+  }
+
+  // Supervisors (derived, enriched with sample roster data for the demo)
+  await prisma.supervisor.deleteMany()
+  const supSeen = new Map<string, { phone?: string }>()
+  for (const p of mockProjects) {
+    if (p.supervisor && !supSeen.has(p.supervisor)) supSeen.set(p.supervisor, { phone: p.supervisorPhone })
+  }
+  const sampleRegions = ['איטליה, מרכז אירופה', 'פולין, מזרח אירופה', 'ארה״ב, קנדה', 'תורכיה, יוון', 'צרפת, ספרד', 'הודו, מזרח אסיה']
+  const sampleAvail = ['פנוי מ-15/8', 'לא זמין בחגים', 'זמין בכל עת', 'עדיף נסיעות קצרות עד שבוע', 'פנוי בסופי שבוע בלבד', 'בחו״ל עד 20/8']
+  const sampleBodies = ['OU, בד״ץ', 'כ״ף, OK', 'בד״ץ העדה', 'OU', 'Star-K, OK', 'רבנות, כ״ף']
+  let si = 0
+  for (const [name, v] of supSeen) {
+    const row = await prisma.supervisor.create({
+      data: {
+        name, phone: v.phone ?? null,
+        regions: sampleRegions[si % sampleRegions.length],
+        availability: sampleAvail[si % sampleAvail.length],
+        kosherBodies: sampleBodies[si % sampleBodies.length],
+        active: si % 5 !== 4,
+      },
+    })
+    supervisorId.set(name, row.id)
+    si++
+  }
+
+  // ---- Projects (snapshot template stages + link master data by id) ----
   const byCategory = new Map(defaultTemplates.map((t) => [t.category, t]))
   const wkTemplate = defaultTemplates.find((t) => t.id === 'tpl-wok')!
-  // Spread end-dates around "today" so the demo feels alive: a couple overdue,
-  // a couple due-soon, the rest comfortably ahead.
+  // Spread end-dates around "today" so the demo feels alive.
   const endOffsets = [-6, -2, 3, 9, 18, 27, 40, 55]
   const fmt = (d: Date) => d.toISOString().split('T')[0]
   await prisma.project.deleteMany()
   for (let i = 0; i < mockProjects.length; i++) {
     const project = mockProjects[i]
-    const template = byCategory.get(project.kosherBody) ?? wkTemplate // default: full WK pipeline
+    const template = byCategory.get(project.kosherBody) ?? wkTemplate
     const end = new Date()
     end.setDate(end.getDate() + (endOffsets[i] ?? 30))
     const start = new Date(end)
@@ -87,6 +131,9 @@ async function main() {
       startDate: project.status === 'הסתיים' ? project.startDate : fmt(start),
       endDate: project.status === 'הסתיים' ? project.endDate : fmt(end),
       templateId: project.templateId ?? template.id,
+      importerId: importerId.get(project.importer) ?? null,
+      supervisorId: supervisorId.get(project.supervisor) ?? null,
+      kosherBodyId: kosherBodyId.get((project.kosherBody || '').trim()) ?? null,
       stages: syncStatusesFromFlags(normalizeStages(instantiateStages(template)), project),
       enabledTools: template.enabledTools ?? [],
     }
@@ -94,55 +141,8 @@ async function main() {
     await prisma.project.create({ data: { ...data, id: project.id } })
   }
 
-  // ---- Importers (derived from the mock projects) ----
-  await prisma.importer.deleteMany()
-  const importerMap = new Map<string, { name: string; phone?: string; email?: string; country?: string }>()
-  for (const p of mockProjects) {
-    if (!importerMap.has(p.importer)) {
-      importerMap.set(p.importer, {
-        name: p.importer,
-        phone: p.importerPhone,
-        email: p.importerEmail,
-        country: p.country,
-      })
-    }
-  }
-  for (const imp of importerMap.values()) {
-    await prisma.importer.create({
-      data: { name: imp.name, phone: imp.phone ?? null, email: imp.email ?? null, country: imp.country ?? null },
-    })
-  }
-
-  // ---- Supervisors (derived from the mock projects, enriched for demo) ----
-  await prisma.supervisor.deleteMany()
-  const supMap = new Map<string, { name: string; phone?: string }>()
-  for (const p of mockProjects) {
-    if (p.supervisor && !supMap.has(p.supervisor)) {
-      supMap.set(p.supervisor, { name: p.supervisor, phone: p.supervisorPhone })
-    }
-  }
-  // Sample availability / regions / bodies cycled across supervisors so the
-  // demo shows a realistic roster (real data is entered via the UI).
-  const sampleRegions = ['איטליה, מרכז אירופה', 'פולין, מזרח אירופה', 'ארה״ב, קנדה', 'תורכיה, יוון', 'צרפת, ספרד', 'הודו, מזרח אסיה']
-  const sampleAvail = ['פנוי מ-15/8', 'לא זמין בחגים', 'זמין בכל עת', 'עדיף נסיעות קצרות עד שבוע', 'פנוי בסופי שבוע בלבד', 'בחו״ל עד 20/8']
-  const sampleBodies = ['OU, בד״ץ', 'כ״ף, OK', 'בד״ץ העדה', 'OU', 'Star-K, OK', 'רבנות, כ״ף']
-  let si = 0
-  for (const s of supMap.values()) {
-    await prisma.supervisor.create({
-      data: {
-        name: s.name,
-        phone: s.phone ?? null,
-        regions: sampleRegions[si % sampleRegions.length],
-        availability: sampleAvail[si % sampleAvail.length],
-        kosherBodies: sampleBodies[si % sampleBodies.length],
-        active: si % 5 !== 4, // ~1 in 5 marked unavailable
-      },
-    })
-    si++
-  }
-
   console.log(
-    `Seeded ${users.length} users (default password "${DEFAULT_PASSWORD}"), ${defaultTemplates.length} templates, ${mockProjects.length} projects, ${importerMap.size} importers, ${supMap.size} supervisors.`
+    `Seeded ${users.length} users (default password "${DEFAULT_PASSWORD}"), ${defaultTemplates.length} templates, ${importerId.size} importers, ${supervisorId.size} supervisors, ${kosherBodyId.size} kosher bodies, ${mockProjects.length} projects (linked by id).`
   )
 }
 
