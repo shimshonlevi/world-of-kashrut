@@ -17,12 +17,10 @@ async function buildSystemPrompt() {
 - מדינה: ${p.country}
 - סוג כשרות: ${p.kosherBody}
 - סטטוס: ${p.status}
-- שלב נוכחי: ${p.currentStage}
 - אחראית: ${p.responsible}
 - משגיח: ${p.supervisor}${p.supervisorPhone ? ` (${p.supervisorPhone})` : ''}
 - דוח התקבל: ${p.reportReceived ? 'כן' : 'לא'}
 - תשלום התקבל: ${p.paid ? 'כן' : 'לא'}
-- עמלת יום: ${p.profitDaily}₪ | עמלת כשרות: ${p.kosherFee}₪ | עמלת הגשה: ${p.submissionFee}₪
 - הוצאות: ${p.actualExpenses ?? 0}₪ | הצעת מחיר: ${p.quotedPrice ?? 0}₪
 - תאריכים: ${p.startDate} → ${p.endDate}`
     )

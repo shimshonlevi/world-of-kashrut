@@ -1,4 +1,5 @@
 import { Project, DashboardStats, TimelineEvent, Document, ChatMessage, FlightInfo, HotelInfo, WorkflowStage, WorkflowTemplate, TemplateStage, TemplateRequirement, FieldDataType, CoreBindKey, RequirementSource } from './types';
+import { deadlineInfo } from './dates';
 
 // Helper: Get template by ID
 export function getTemplateById(templateId?: string): WorkflowTemplate | undefined {
@@ -350,17 +351,11 @@ export const mockProjects: Project[] = [
     factoryName: 'Belgian Chocolate Factory',
     factoryAddress: 'Brussels, Belgium',
     status: 'בתהליך',
-    currentStage: 'לוגיסטיקה',
     reportReceived: false,
     sentToChaim: false,
     paid: false,
-    profitDaily: 850,
-    kosherFee: 2500,
-    submissionFee: 500,
     quotedPrice: 4500,
     actualExpenses: 3200,
-    daysDelayed: 4,
-    timeline: createTimeline('לוגיסטיקה'),
     chatHistory: createChatHistory(),
     flight: { status: 'not_booked' },
     hotel: { status: 'not_booked' },
@@ -383,17 +378,12 @@ export const mockProjects: Project[] = [
     factoryName: 'French Dairy Co.',
     factoryAddress: 'Lyon, France',
     status: 'הוגש',
-    currentStage: 'אישור',
     reportReceived: true,
     reportPhoto: '/reports/prj002.jpg',
     sentToChaim: true,
     paid: true,
-    profitDaily: 1200,
-    kosherFee: 3500,
-    submissionFee: 750,
     quotedPrice: 6000,
     actualExpenses: 5200,
-    timeline: createTimeline('אישור'),
     chatHistory: createChatHistory(),
     flight: { flightNumber: 'AF1234', departureDate: '2024-02-01', arrivalDate: '2024-02-05', airline: 'Air France', status: 'confirmed' },
     hotel: { hotelName: 'Hotel Lyon', checkIn: '2024-02-01', checkOut: '2024-02-05', status: 'confirmed' },
@@ -416,17 +406,11 @@ export const mockProjects: Project[] = [
     factoryName: 'Oriental Spices Ltd.',
     factoryAddress: 'Shanghai, China',
     status: 'בתהליך',
-    currentStage: 'מסמכים',
     reportReceived: false,
     sentToChaim: false,
     paid: false,
-    profitDaily: 950,
-    kosherFee: 4000,
-    submissionFee: 600,
     quotedPrice: 6500,
     actualExpenses: 0,
-    daysDelayed: 7,
-    timeline: createTimeline('מסמכים'),
     chatHistory: createChatHistory(),
     flight: { status: 'not_booked' },
     hotel: { status: 'not_booked' },
@@ -449,17 +433,12 @@ export const mockProjects: Project[] = [
     factoryName: 'Italian Bakery Roma',
     factoryAddress: 'Rome, Italy',
     status: 'הסתיים',
-    currentStage: 'אישור',
     reportReceived: true,
     reportPhoto: '/reports/prj004.jpg',
     sentToChaim: true,
     paid: true,
-    profitDaily: 750,
-    kosherFee: 2000,
-    submissionFee: 400,
     quotedPrice: 3500,
     actualExpenses: 3100,
-    timeline: createTimeline('אישור'),
     chatHistory: createChatHistory(),
     flight: { flightNumber: 'AZ789', departureDate: '2024-01-20', arrivalDate: '2024-01-25', airline: 'Alitalia', status: 'confirmed' },
     hotel: { hotelName: 'Hotel Roma', checkIn: '2024-01-20', checkOut: '2024-01-25', status: 'confirmed' },
@@ -482,17 +461,12 @@ export const mockProjects: Project[] = [
     factoryName: 'Mendoza Winery',
     factoryAddress: 'Mendoza, Argentina',
     status: 'בתהליך',
-    currentStage: 'ייצור',
     reportReceived: true,
     reportPhoto: '/reports/prj005.jpg',
     sentToChaim: false,
     paid: false,
-    profitDaily: 1500,
-    kosherFee: 5000,
-    submissionFee: 1000,
     quotedPrice: 8000,
     actualExpenses: 6500,
-    timeline: createTimeline('ייצור'),
     chatHistory: createChatHistory(),
     flight: { flightNumber: 'AR456', departureDate: '2024-03-01', arrivalDate: '2024-03-10', airline: 'Aerolineas', status: 'confirmed' },
     hotel: { hotelName: 'Hotel Mendoza', checkIn: '2024-03-01', checkOut: '2024-03-10', status: 'pending' },
@@ -515,17 +489,11 @@ export const mockProjects: Project[] = [
     factoryName: 'Thai Canning Corp.',
     factoryAddress: 'Bangkok, Thailand',
     status: 'הוגש',
-    currentStage: 'לוגיסטיקה',
     reportReceived: false,
     sentToChaim: true,
     paid: false,
-    profitDaily: 680,
-    kosherFee: 2200,
-    submissionFee: 450,
     quotedPrice: 4000,
     actualExpenses: 2800,
-    daysDelayed: 2,
-    timeline: createTimeline('לוגיסטיקה'),
     chatHistory: createChatHistory(),
     flight: { status: 'pending' },
     hotel: { status: 'pending' },
@@ -548,17 +516,12 @@ export const mockProjects: Project[] = [
     factoryName: 'Nordic Fish AS',
     factoryAddress: 'Oslo, Norway',
     status: 'בתהליך',
-    currentStage: 'ייצור',
     reportReceived: true,
     reportPhoto: '/reports/prj007.jpg',
     sentToChaim: true,
     paid: true,
-    profitDaily: 1100,
-    kosherFee: 3800,
-    submissionFee: 700,
     quotedPrice: 6200,
     actualExpenses: 5800,
-    timeline: createTimeline('ייצור'),
     chatHistory: createChatHistory(),
     flight: { flightNumber: 'SK123', departureDate: '2024-02-20', arrivalDate: '2024-02-28', airline: 'SAS', status: 'confirmed' },
     hotel: { hotelName: 'Hotel Oslo', checkIn: '2024-02-20', checkOut: '2024-02-28', status: 'confirmed' },
@@ -581,17 +544,12 @@ export const mockProjects: Project[] = [
     factoryName: 'German Sweets GmbH',
     factoryAddress: 'Munich, Germany',
     status: 'הסתיים',
-    currentStage: 'אישור',
     reportReceived: true,
     reportPhoto: '/reports/prj008.jpg',
     sentToChaim: true,
     paid: true,
-    profitDaily: 900,
-    kosherFee: 2800,
-    submissionFee: 550,
     quotedPrice: 4800,
     actualExpenses: 4200,
-    timeline: createTimeline('אישור'),
     chatHistory: createChatHistory(),
     flight: { flightNumber: 'LH567', departureDate: '2024-01-15', arrivalDate: '2024-01-22', airline: 'Lufthansa', status: 'confirmed' },
     hotel: { hotelName: 'Hotel Munich', checkIn: '2024-01-15', checkOut: '2024-01-22', status: 'confirmed' },
@@ -601,14 +559,13 @@ export const mockProjects: Project[] = [
 ];
 
 export const calculateStats = (projects: Project[]): DashboardStats => {
-  const totalProfit = projects.reduce(
-    (sum, p) => sum + p.profitDaily + p.kosherFee + p.submissionFee,
-    0
-  );
+  // Profit from the real financial fields (quote minus actual expenses).
+  const totalProfit = projects.reduce((sum, p) => sum + ((p.quotedPrice || 0) - (p.actualExpenses || 0)), 0);
   const pendingReports = projects.filter(p => !p.reportReceived && p.status !== 'הסתיים').length;
   const projectsInProgress = projects.filter(p => p.status === 'בתהליך').length;
   const completedProjects = projects.filter(p => p.status === 'הסתיים').length;
-  const urgentTasks = projects.filter(p => p.daysDelayed && p.daysDelayed > 3).length;
+  // Urgent = past its deadline (accurate, from endDate — no stale daysDelayed).
+  const urgentTasks = projects.filter(p => deadlineInfo(p.endDate, p.status).tone === 'overdue').length;
   const needsFlightBooking = projects.filter(p => p.needsFlightBooking).length;
   const clientsAwaitingResponse = projects.filter(p => p.clientAwaitingResponse).length;
 
@@ -622,17 +579,6 @@ export const calculateStats = (projects: Project[]): DashboardStats => {
     urgentTasks,
     needsFlightBooking,
     clientsAwaitingResponse,
-  };
-};
-
-export const getUnpaidProjectsFinancials = (projects: Project[]) => {
-  const unpaidProjects = projects.filter(p => !p.paid);
-  return {
-    totalDaily: unpaidProjects.reduce((sum, p) => sum + p.profitDaily, 0),
-    totalKosherFee: unpaidProjects.reduce((sum, p) => sum + p.kosherFee, 0),
-    totalSubmissionFee: unpaidProjects.reduce((sum, p) => sum + p.submissionFee, 0),
-    count: unpaidProjects.length,
-    projects: unpaidProjects,
   };
 };
 

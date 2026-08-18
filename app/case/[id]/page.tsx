@@ -982,8 +982,6 @@ export default function CasePage() {
                 <span>{project.country}</span>
                 <span>•</span>
                 <span>{project.kosherBody}</span>
-                <span>•</span>
-                <span>{project.currentStage}</span>
               </div>
             </div>
             

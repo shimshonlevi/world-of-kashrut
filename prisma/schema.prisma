@@ -23,7 +23,7 @@ model Project {
   factoryName             String
   factoryAddress          String
   status                  String
-  currentStage            String
+  currentStage            String   @default("")
   templateId              String?
   // Real relations to master data. The name strings above stay as a snapshot
   // (history + convenient display); these link by id for integrity + joins.
@@ -43,13 +43,8 @@ model Project {
   submittedToRabbinate    Boolean  @default(false)
   submittedForPayment     Boolean  @default(false)
   paid                    Boolean  @default(false)
-  profitDaily             Int
-  kosherFee               Int
-  submissionFee           Int
   actualExpenses          Int?
   quotedPrice             Int?
-  daysDelayed             Int?
-  timeline                String
   chatHistory             String
   flight                  String
   hotel                   String

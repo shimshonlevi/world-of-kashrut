@@ -120,13 +120,8 @@ export interface Project {
   submittedToRabbinate?: boolean;
   submittedForPayment?: boolean;
   paid: boolean;
-  profitDaily: number;
-  kosherFee: number;
-  submissionFee: number;
   actualExpenses?: number;
   quotedPrice?: number;
-  daysDelayed?: number;
-  timeline: TimelineEvent[];
   chatHistory: ChatMessage[];
   flight: FlightInfo;
   hotel: HotelInfo;

@@ -1,7 +1,6 @@
 import type { Project, ProjectApprover, ProjectStage } from './types'
 
-export type DbProject = Omit<Project, 'timeline' | 'chatHistory' | 'flight' | 'hotel' | 'productionDetails' | 'approvers' | 'stages' | 'enabledTools'> & {
-  timeline: string
+export type DbProject = Omit<Project, 'chatHistory' | 'flight' | 'hotel' | 'productionDetails' | 'approvers' | 'stages' | 'enabledTools'> & {
   chatHistory: string
   flight: string
   hotel: string
@@ -38,9 +37,9 @@ const PROJECT_COLUMNS = new Set<string>([
   'factoryName', 'factoryAddress', 'status', 'currentStage', 'templateId',
   'importerId', 'supervisorId', 'kosherBodyId', 'stages',
   'reportReceived', 'reportPhoto', 'sentToChaim', 'sentToKosherBody', 'certReceived',
-  'submittedToRabbinate', 'submittedForPayment', 'paid', 'profitDaily', 'kosherFee',
-  'submissionFee', 'actualExpenses', 'quotedPrice', 'daysDelayed',
-  'timeline', 'chatHistory', 'flight', 'hotel', 'needsFlightBooking',
+  'submittedToRabbinate', 'submittedForPayment', 'paid',
+  'actualExpenses', 'quotedPrice',
+  'chatHistory', 'flight', 'hotel', 'needsFlightBooking',
   'clientAwaitingResponse', 'productionDetails', 'approvers', 'enabledTools',
 ])
 
@@ -48,10 +47,6 @@ export function serializeProjectForDb(project: Partial<Project>): Partial<DbProj
   const serialized: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(project)) {
     if (PROJECT_COLUMNS.has(key)) serialized[key] = value;
-  }
-
-  if ('timeline' in project) {
-    serialized.timeline = project.timeline ? toJsonString(project.timeline) : toJsonString([]);
   }
 
   if ('chatHistory' in project) {
@@ -88,7 +83,6 @@ export function serializeProjectForDb(project: Partial<Project>): Partial<DbProj
 export function deserializeProjectFromDb(dbProject: DbProject): Project {
   return {
     ...dbProject,
-    timeline: parseJson(dbProject.timeline, []),
     chatHistory: parseJson(dbProject.chatHistory, []),
     flight: parseJson(dbProject.flight, { status: 'not_booked' }),
     hotel: parseJson(dbProject.hotel, { status: 'not_booked' }),

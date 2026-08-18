@@ -42,9 +42,8 @@ export async function GET(request: Request) {
 const PROJECT_DEFAULTS = {
   importerPhone: '', importerEmail: '', country: '', kosherBody: '', supervisor: '',
   supervisorPhone: '', factoryName: '', factoryAddress: '', status: 'בתהליך',
-  currentStage: '', profitDaily: 0, kosherFee: 0, submissionFee: 0,
   reportReceived: false, sentToChaim: false, paid: false, needsFlightBooking: false,
-  clientAwaitingResponse: false, timeline: [], chatHistory: [],
+  clientAwaitingResponse: false, chatHistory: [],
   flight: { status: 'not_booked' }, hotel: { status: 'not_booked' },
   startDate: new Date().toISOString().split('T')[0],
   endDate: new Date().toISOString().split('T')[0],
@@ -75,7 +74,6 @@ export async function POST(request: Request) {
         }
         const stages = instantiateStages({ stages: templateStages });
         body.stages = stages;
-        if (stages[0]) body.currentStage = stages[0].name;
         try {
           body.enabledTools = JSON.parse((template as { tools?: string }).tools || '[]');
         } catch {

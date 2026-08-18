@@ -30,10 +30,10 @@ export function ReportsView({ projects }: ReportsViewProps) {
   const router = useRouter();
 
   const stats = useMemo(() => {
-    const revenue = projects.reduce((s, p) => s + (p.quotedPrice || p.kosherFee || 0), 0);
+    const revenue = projects.reduce((s, p) => s + (p.quotedPrice || 0), 0);
     const expenses = projects.reduce((s, p) => s + (p.actualExpenses || 0), 0);
     const unpaid = projects.filter((p) => !p.paid);
-    const unpaidSum = unpaid.reduce((s, p) => s + (p.quotedPrice || p.kosherFee || 0), 0);
+    const unpaidSum = unpaid.reduce((s, p) => s + (p.quotedPrice || 0), 0);
     const byStatus = {
       'בתהליך': projects.filter((p) => p.status === 'בתהליך').length,
       'הוגש': projects.filter((p) => p.status === 'הוגש').length,

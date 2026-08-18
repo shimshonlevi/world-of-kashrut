@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/shared/status-badge';
+import { deadlineInfo } from '@/lib/dates';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -75,22 +76,23 @@ export function QuickViewDrawer({ project, isOpen, onClose }: QuickViewDrawerPro
         <ScrollArea className="h-[calc(100vh-280px)]">
           <div className="p-6 space-y-6">
             {/* Urgent Alerts */}
-            {(project.daysDelayed || project.clientAwaitingResponse) && (
-              <div className="p-4 rounded-lg bg-destructive/5 border border-destructive/20">
-                <div className="flex items-center gap-2 text-destructive mb-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  <span className="font-medium text-sm">התראות</span>
+            {(() => {
+              const dl = deadlineInfo(project.endDate, project.status);
+              const overdue = dl.tone === 'overdue';
+              if (!overdue && !project.clientAwaitingResponse) return null;
+              return (
+                <div className="p-4 rounded-lg bg-destructive/5 border border-destructive/20">
+                  <div className="flex items-center gap-2 text-destructive mb-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="font-medium text-sm">התראות</span>
+                  </div>
+                  <ul className="space-y-1 text-sm text-destructive/80">
+                    {overdue && <li>{dl.label}</li>}
+                    {project.clientAwaitingResponse && <li>יבואן ממתין לתגובה</li>}
+                  </ul>
                 </div>
-                <ul className="space-y-1 text-sm text-destructive/80">
-                  {project.daysDelayed && (
-                    <li>עיכוב של {project.daysDelayed} ימים</li>
-                  )}
-                  {project.clientAwaitingResponse && (
-                    <li>יבואן ממתין לתגובה</li>
-                  )}
-                </ul>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Progress */}
             <div>
@@ -123,24 +125,6 @@ export function QuickViewDrawer({ project, isOpen, onClose }: QuickViewDrawerPro
                         }`}
                       />
                     )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Timeline Preview */}
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-3">ציר זמן אחרון</h4>
-              <div className="space-y-3">
-                {project.timeline.slice(-3).map((event) => (
-                  <div key={event.id} className="flex items-start gap-3">
-                    <div className={`w-2 h-2 rounded-full mt-2 ${event.completed ? 'bg-emerald-500' : 'bg-muted-foreground'}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{event.title}</p>
-                      <p className="text-xs text-muted-foreground">{event.date}</p>
-                    </div>
                   </div>
                 ))}
               </div>
