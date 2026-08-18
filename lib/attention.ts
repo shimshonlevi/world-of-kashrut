@@ -102,6 +102,33 @@ export function awaitingReviewCount(project: Project): number {
   return n;
 }
 
+export interface ReviewItem {
+  id: string;
+  projectId: string;
+  projectName: string;
+  label: string;
+  kind: 'approval' | 'document';
+}
+
+/** The actual items awaiting *this user's* review across all cases (newest cases first). */
+export function myAwaitingReviewItems(projects: Project[], userName?: string): ReviewItem[] {
+  if (!userName) return [];
+  const items: ReviewItem[] = [];
+  for (const p of projects) {
+    if (p.status === 'הסתיים') continue;
+    for (const s of p.stages ?? []) {
+      for (const r of s.requirements) {
+        if (r.type === 'approval' && r.status === 'submitted' && r.approverName === userName) {
+          items.push({ id: `${p.id}-${r.id}`, projectId: p.id, projectName: p.projectName, label: r.label, kind: 'approval' });
+        } else if (r.type === 'document' && r.status === 'submitted' && p.responsible === userName) {
+          items.push({ id: `${p.id}-${r.id}`, projectId: p.id, projectName: p.projectName, label: r.label, kind: 'document' });
+        }
+      }
+    }
+  }
+  return items;
+}
+
 /** Items awaiting *this user's* review: approvals sent to them + docs on their own cases. */
 export function myAwaitingReviewCount(project: Project, userName?: string): number {
   if (project.status === 'הסתיים' || !userName) return 0;

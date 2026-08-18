@@ -98,9 +98,16 @@ interface ActionCenterProps {
   onOpenCase: (projectId: string) => void;
 }
 
+const GROUPS: { urgency: Urgency; label: string; stripe: string }[] = [
+  { urgency: 'high', label: 'דחוף', stripe: 'border-r-rose-500' },
+  { urgency: 'medium', label: 'השבוע', stripe: 'border-r-amber-500' },
+  { urgency: 'low', label: 'ממתין', stripe: 'border-r-primary' },
+];
+
 export function ActionCenter({ projects, onOpenCase }: ActionCenterProps) {
   const actions = useMemo(() => buildActions(projects), [projects]);
   const highCount = actions.filter((a) => a.urgency === 'high').length;
+  const byUrgency = (u: Urgency) => actions.filter((a) => a.urgency === u);
 
   return (
     <Card className="border-border/60 elevated overflow-hidden">
@@ -127,27 +134,38 @@ export function ActionCenter({ projects, onOpenCase }: ActionCenterProps) {
             <p className="text-sm">כל הכבוד, אתה מעודכן בכל התיקים שלך</p>
           </div>
         ) : (
-          <ul className="divide-y divide-border/60 max-h-[22rem] overflow-y-auto">
-            {actions.map((a) => (
-              <li key={a.id}>
-                <button
-                  onClick={() => onOpenCase(a.projectId)}
-                  className="group flex w-full items-center gap-3 px-4 py-3 text-right transition-colors hover:bg-muted/60"
-                >
-                  <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', URGENCY_STYLE[a.urgency])}>
-                    <a.icon className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{a.text}</span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {a.projectName} · {a.importer}
-                    </span>
-                  </span>
-                  <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground/50 transition-transform group-hover:-translate-x-1 group-hover:text-primary" />
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className="max-h-[24rem] overflow-y-auto">
+            {GROUPS.map((g) => {
+              const items = byUrgency(g.urgency);
+              if (items.length === 0) return null;
+              return (
+                <div key={g.urgency}>
+                  <p className="px-4 pt-3 pb-1 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground/70">{g.label}</p>
+                  <ul>
+                    {items.map((a) => (
+                      <li key={a.id}>
+                        <button
+                          onClick={() => onOpenCase(a.projectId)}
+                          className={cn('group flex w-full items-center gap-3 border-t border-r-[3px] border-border/60 px-4 py-3 text-right transition-colors hover:bg-muted/60', g.stripe)}
+                        >
+                          <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', URGENCY_STYLE[a.urgency])}>
+                            <a.icon className="h-4 w-4" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-medium">{a.text}</span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {a.projectName} · {a.importer}
+                            </span>
+                          </span>
+                          <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground/50 transition-transform group-hover:-translate-x-1 group-hover:text-primary" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
         )}
       </CardContent>
     </Card>

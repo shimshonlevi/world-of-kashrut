@@ -12,10 +12,11 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { KPICards } from '@/components/dashboard/kpi-cards';
 import { ActionCenter } from '@/components/dashboard/action-center';
 import { MessagesInbox } from '@/components/dashboard/messages-inbox';
+import { ApprovalsPreview } from '@/components/dashboard/approvals-preview';
+import { RecentCasesTable } from '@/components/dashboard/recent-cases-table';
 import { ComingSoon } from '@/components/dashboard/coming-soon';
 import { DashboardHero } from '@/components/dashboard/dashboard-hero';
 import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton';
-import { AdvancedProjectTable } from '@/components/dashboard/advanced-project-table';
 import { QuickViewDrawer } from '@/components/dashboard/quick-view-drawer';
 import { NewProjectWizard } from '@/components/dashboard/new-project-wizard';
 import { NotificationCenter } from '@/components/dashboard/notification-center';
@@ -35,7 +36,7 @@ import { TemplatesView } from '@/components/views/templates-view';
 import { SettingsView } from '@/components/views/settings-view';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { LayoutDashboard, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 function DashboardPage() {
@@ -52,6 +53,8 @@ function DashboardPage() {
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [dashTab, setDashTab] = useState('dashboard');
+  const [showRoadmap, setShowRoadmap] = useState(false);
 
   // Sync page / wizard from URL params (enables deep links + command palette nav).
   useEffect(() => {
@@ -280,6 +283,36 @@ function DashboardPage() {
     }
   };
 
+  const openCase = (id: string) => router.push(`/case/${id}`);
+
+  // The redesigned dashboard "command center" body (used for admin + secretary).
+  const dashboardBody = (
+    <div className="space-y-4">
+      <KPICards stats={stats} onNavigate={setCurrentPage} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <ActionCenter projects={userProjects} onOpenCase={openCase} />
+        </div>
+        <div className="space-y-4">
+          <ApprovalsPreview projects={projects} userName={user?.name} onOpenAll={() => setCurrentPage('approvals')} onOpenCase={openCase} />
+          <MessagesInbox projects={userProjects} />
+        </div>
+      </div>
+      <RecentCasesTable projects={userProjects} onOpenCase={openCase} onOpenAll={() => setCurrentPage('projects')} />
+      <div>
+        <button
+          onClick={() => setShowRoadmap((v) => !v)}
+          className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-border/70 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted/40"
+        >
+          <Sparkles className="h-4 w-4 text-primary" />
+          <span>מפת דרכים — יכולות עתידיות</span>
+          <span className="font-semibold text-primary">{showRoadmap ? 'הסתר ▲' : 'צפייה ←'}</span>
+        </button>
+        {showRoadmap && <div className="mt-4"><ComingSoon /></div>}
+      </div>
+    </div>
+  );
+
   return (
     <AppLayout
       currentPage={currentPage}
@@ -300,90 +333,50 @@ function DashboardPage() {
       <div className="max-w-7xl mx-auto space-y-4 fade-up">
         {/* Render different content based on current page */}
         {currentPage === 'dashboard' && (
-          <>
-            {/* Welcome hero & Tabs */}
-            <DashboardHero
-              name={user?.name}
-              activeProjects={userProjects.length}
-              urgentTasks={stats.urgentTasks}
-              pendingApprovals={pendingApprovals}
-              onApprovalsClick={() => setCurrentPage('approvals')}
-            >
-              {user?.role === 'admin' && (
-                <Tabs defaultValue="dashboard" className="w-auto">
-                  <TabsList className="bg-background/70 backdrop-blur border shadow-sm">
-                    <TabsTrigger
-                      value="dashboard"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      דשבורד
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="analytics"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2"
-                    >
-                      <BarChart3 className="h-4 w-4" />
-                      ניתוחים
-                      <Badge variant="secondary" className="h-5 text-[10px]">
-                        חדש
-                      </Badge>
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
+          user?.role === 'admin' ? (
+            <Tabs value={dashTab} onValueChange={setDashTab} className="space-y-4">
+              <DashboardHero
+                name={user?.name}
+                activeProjects={userProjects.length}
+                urgentTasks={stats.urgentTasks}
+                pendingApprovals={pendingApprovals}
+                onApprovalsClick={() => setCurrentPage('approvals')}
+              >
+                <TabsList className="bg-background/70 backdrop-blur border shadow-sm">
+                  <TabsTrigger value="dashboard" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    דשבורד
+                  </TabsTrigger>
+                  <TabsTrigger value="analytics" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    ניתוחים
+                    <Badge variant="secondary" className="h-5 text-[10px]">חדש</Badge>
+                  </TabsTrigger>
+                </TabsList>
+              </DashboardHero>
+              {loadingProjects ? (
+                <DashboardSkeleton />
+              ) : (
+                <>
+                  <TabsContent value="dashboard" className="mt-0">{dashboardBody}</TabsContent>
+                  <TabsContent value="analytics" className="mt-0">
+                    <ManagerAnalytics projects={projects} />
+                  </TabsContent>
+                </>
               )}
-            </DashboardHero>
-
-            {loadingProjects ? (
-              <DashboardSkeleton />
-            ) : (
+            </Tabs>
+          ) : (
             <>
-            {/* KPI Cards */}
-            <KPICards stats={stats} />
-
-            {/* Daily worklist + recent messages, side by side */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <ActionCenter projects={userProjects} onOpenCase={(id) => router.push(`/case/${id}`)} />
-              </div>
-              <MessagesInbox projects={userProjects} />
-            </div>
-
-            {/* Main Content */}
-            {user?.role === 'admin' ? (
-              <Tabs defaultValue="dashboard">
-                <TabsContent value="dashboard" className="mt-0">
-                  <AdvancedProjectTable
-                    projects={userProjects}
-                    onSelectProject={handleSelectProject}
-                    onOpenFullCase={handleOpenFullCase}
-                    onUpdateProject={handleUpdateProject}
-                    onArchiveProject={handleArchiveProject}
-                    onDeleteProject={handleDeleteProject}
-                    onBulkArchive={handleBulkArchive}
-                    isAdmin={user?.role === 'admin'}
-                    selectedProjectId={selectedProject?.id}
-                  />
-                </TabsContent>
-                <TabsContent value="analytics" className="mt-0">
-                  <ManagerAnalytics projects={projects} />
-                </TabsContent>
-              </Tabs>
-            ) : (
-              <AdvancedProjectTable
-                projects={userProjects}
-                onSelectProject={handleSelectProject}
-                onOpenFullCase={handleOpenFullCase}
-                onUpdateProject={handleUpdateProject}
-                selectedProjectId={selectedProject?.id}
+              <DashboardHero
+                name={user?.name}
+                activeProjects={userProjects.length}
+                urgentTasks={stats.urgentTasks}
+                pendingApprovals={pendingApprovals}
+                onApprovalsClick={() => setCurrentPage('approvals')}
               />
-            )}
-
-            {/* Roadmap showcase — communicates the vision in demos */}
-            <ComingSoon />
+              {loadingProjects ? <DashboardSkeleton /> : dashboardBody}
             </>
-            )}
-          </>
+          )
         )}
 
         {currentPage === 'projects' && (
