@@ -69,7 +69,7 @@ export function KPICards({ stats }: KPICardsProps) {
       label: 'רווח חודשי',
       value: `${(stats.totalProfit / 1000).toFixed(1)}K`,
       icon: DollarSign,
-      tone: 'gold',
+      tone: 'primary',
       trend: stats.monthlyGrowth,
       pulse: false,
       description: 'רווח מצטבר החודש',
@@ -82,7 +82,7 @@ export function KPICards({ stats }: KPICardsProps) {
     amber: { rail: 'bg-amber-500', chip: 'bg-amber-500/10', icon: 'text-amber-600' },
     sky: { rail: 'bg-sky-500', chip: 'bg-sky-500/10', icon: 'text-sky-600' },
     emerald: { rail: 'bg-emerald-500', chip: 'bg-emerald-500/10', icon: 'text-emerald-600' },
-    gold: { rail: 'bg-gold-gradient', chip: 'bg-primary/10', icon: 'text-primary' },
+    primary: { rail: 'bg-primary', chip: 'bg-primary/10', icon: 'text-primary' },
   };
 
   return (

@@ -20,7 +20,7 @@ export function ComingSoon() {
     <Card className="border-border/60 elevated overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/15 text-gold">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Sparkles className="h-4 w-4" />
           </span>
           בקרוב במערכת

@@ -3,8 +3,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* World of Kashrut — Clean & Modern "White + Gold accent" Theme */
-/* Light Mode (default) — crisp white surfaces, neutral slate ink, gold accent */
+/* World of Kashrut — Navy admin theme, blue accent (office CRM cockpit) */
+/* Light Mode (default) — crisp white surfaces, neutral slate ink, blue accent */
 :root {
   --background: oklch(0.985 0.0015 255);
   --foreground: oklch(0.21 0.012 260);
@@ -41,15 +41,13 @@
   --sidebar-border: oklch(0.37 0.03 262);
   --sidebar-ring: oklch(0.62 0.15 255);
 
-  /* Brand + status colors */
-  --gold: oklch(0.74 0.13 84);
-  --gold-soft: oklch(0.9 0.07 86);
+  /* Status colors (semantic only — accent is the blue primary) */
   --success: oklch(0.6 0.15 150);
   --warning: oklch(0.75 0.15 80);
   --info: oklch(0.55 0.13 250);
 }
 
-/* Dark Mode — neutral slate with luminous gold accent */
+/* Dark Mode — neutral slate with blue accent */
 .dark {
   --background: oklch(0.165 0.008 260);
   --foreground: oklch(0.96 0.003 260);
@@ -84,8 +82,6 @@
   --sidebar-border: oklch(0.32 0.03 262);
   --sidebar-ring: oklch(0.62 0.15 255);
 
-  --gold: oklch(0.8 0.13 85);
-  --gold-soft: oklch(0.5 0.09 82);
   --success: oklch(0.68 0.14 150);
   --warning: oklch(0.78 0.14 82);
   --info: oklch(0.65 0.13 250);
@@ -94,8 +90,6 @@
 @theme inline {
   --font-sans: var(--font-heebo), 'Heebo', system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --color-gold: var(--gold);
-  --color-gold-soft: var(--gold-soft);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
@@ -181,48 +175,6 @@
   .fade-up {
     animation: none;
   }
-}
-
-/* Glassmorphism utility classes - Light mode */
-.glass {
-  background: oklch(1 0 0 / 0.72);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid oklch(0.9 0.004 260 / 0.6);
-  box-shadow: 0 4px 24px oklch(0.2 0.01 260 / 0.06);
-}
-
-.glass-card {
-  background: oklch(1 0 0 / 0.82);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid oklch(0.9 0.004 260 / 0.6);
-  box-shadow: 0 8px 32px oklch(0.2 0.01 260 / 0.08);
-}
-
-/* Glassmorphism - Dark mode */
-.dark .glass {
-  background: oklch(0.205 0.013 70 / 0.62);
-  border: 1px solid oklch(0.3 0.016 72 / 0.4);
-  box-shadow: 0 4px 24px oklch(0 0 0 / 0.35);
-}
-
-.dark .glass-card {
-  background: oklch(0.205 0.013 70 / 0.72);
-  border: 1px solid oklch(0.35 0.02 72 / 0.3);
-  box-shadow: 0 8px 32px oklch(0 0 0 / 0.4);
-}
-
-/* Brand utilities */
-.text-gold-gradient {
-  background: linear-gradient(135deg, oklch(0.72 0.13 85), oklch(0.62 0.12 70));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.bg-gold-gradient {
-  background: linear-gradient(135deg, oklch(0.8 0.13 86), oklch(0.6 0.11 72));
 }
 
 /* Flat, calm elevation — a workspace surface, not a marketing card */

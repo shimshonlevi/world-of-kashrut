@@ -142,7 +142,7 @@ export function ReportsView({ projects }: ReportsViewProps) {
                     <span className="text-muted-foreground tabular-nums">{count} תיקים</span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-gold-gradient rounded-full" style={{ width: `${pct}%` }} />
+                    <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               );
