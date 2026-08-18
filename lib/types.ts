@@ -121,10 +121,8 @@ export interface Project {
   submissionFee: number;
   actualExpenses?: number;
   quotedPrice?: number;
-  driveLink: string;
   daysDelayed?: number;
   timeline: TimelineEvent[];
-  documents: Document[];
   chatHistory: ChatMessage[];
   flight: FlightInfo;
   hotel: HotelInfo;

@@ -42,9 +42,9 @@ export async function GET(request: Request) {
 const PROJECT_DEFAULTS = {
   importerPhone: '', importerEmail: '', country: '', kosherBody: '', supervisor: '',
   supervisorPhone: '', factoryName: '', factoryAddress: '', status: 'בתהליך',
-  currentStage: '', driveLink: '', profitDaily: 0, kosherFee: 0, submissionFee: 0,
+  currentStage: '', profitDaily: 0, kosherFee: 0, submissionFee: 0,
   reportReceived: false, sentToChaim: false, paid: false, needsFlightBooking: false,
-  clientAwaitingResponse: false, timeline: [], documents: [], chatHistory: [],
+  clientAwaitingResponse: false, timeline: [], chatHistory: [],
   flight: { status: 'not_booked' }, hotel: { status: 'not_booked' },
   startDate: new Date().toISOString().split('T')[0],
   endDate: new Date().toISOString().split('T')[0],

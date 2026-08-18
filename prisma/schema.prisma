@@ -40,10 +40,8 @@ model Project {
   submissionFee           Int
   actualExpenses          Int?
   quotedPrice             Int?
-  driveLink               String
   daysDelayed             Int?
   timeline                String
-  documents               String
   chatHistory             String
   flight                  String
   hotel                   String

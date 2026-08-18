@@ -89,7 +89,6 @@ async function main() {
       templateId: project.templateId ?? template.id,
       stages: syncStatusesFromFlags(normalizeStages(instantiateStages(template)), project),
       enabledTools: template.enabledTools ?? [],
-      driveLink: '', // legacy field, unused — documents live in the Document index
     }
     const data = serializeProjectForDb(withStages)
     await prisma.project.create({ data: { ...data, id: project.id } })

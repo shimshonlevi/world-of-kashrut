@@ -1,8 +1,7 @@
 import type { Project, ProjectApprover, ProjectStage } from './types'
 
-export type DbProject = Omit<Project, 'timeline' | 'documents' | 'chatHistory' | 'flight' | 'hotel' | 'productionDetails' | 'approvers' | 'stages' | 'enabledTools'> & {
+export type DbProject = Omit<Project, 'timeline' | 'chatHistory' | 'flight' | 'hotel' | 'productionDetails' | 'approvers' | 'stages' | 'enabledTools'> & {
   timeline: string
-  documents: string
   chatHistory: string
   flight: string
   hotel: string
@@ -39,8 +38,8 @@ const PROJECT_COLUMNS = new Set<string>([
   'factoryName', 'factoryAddress', 'status', 'currentStage', 'templateId', 'stages',
   'reportReceived', 'reportPhoto', 'sentToChaim', 'sentToKosherBody', 'certReceived',
   'submittedToRabbinate', 'submittedForPayment', 'paid', 'profitDaily', 'kosherFee',
-  'submissionFee', 'actualExpenses', 'quotedPrice', 'driveLink', 'daysDelayed',
-  'timeline', 'documents', 'chatHistory', 'flight', 'hotel', 'needsFlightBooking',
+  'submissionFee', 'actualExpenses', 'quotedPrice', 'daysDelayed',
+  'timeline', 'chatHistory', 'flight', 'hotel', 'needsFlightBooking',
   'clientAwaitingResponse', 'productionDetails', 'approvers', 'enabledTools',
 ])
 
@@ -52,10 +51,6 @@ export function serializeProjectForDb(project: Partial<Project>): Partial<DbProj
 
   if ('timeline' in project) {
     serialized.timeline = project.timeline ? toJsonString(project.timeline) : toJsonString([]);
-  }
-
-  if ('documents' in project) {
-    serialized.documents = project.documents ? toJsonString(project.documents) : toJsonString([]);
   }
 
   if ('chatHistory' in project) {
@@ -93,7 +88,6 @@ export function deserializeProjectFromDb(dbProject: DbProject): Project {
   return {
     ...dbProject,
     timeline: parseJson(dbProject.timeline, []),
-    documents: parseJson(dbProject.documents, []),
     chatHistory: parseJson(dbProject.chatHistory, []),
     flight: parseJson(dbProject.flight, { status: 'not_booked' }),
     hotel: parseJson(dbProject.hotel, { status: 'not_booked' }),
