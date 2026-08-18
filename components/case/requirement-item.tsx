@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { ProjectRequirement, RequirementType } from '@/lib/types';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -95,6 +96,7 @@ interface RequirementItemProps {
 }
 
 export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, onRequest, onRecordReply, onAnalyzeAI, originLabel, onRemove, busy }: RequirementItemProps) {
+  const confirm = useConfirm();
   const meta = TYPE_META[req.type];
   const Icon = meta.icon;
   const fileRef = useRef<HTMLInputElement>(null);
@@ -202,7 +204,7 @@ export function RequirementItem({ requirement: req, onUpdate, onUploadDocument, 
                   <DropdownMenuItem onClick={() => setEditingLabel(true)}>
                     <Pencil className="h-4 w-4 ml-2" /> שנה שם
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive" onClick={() => { if (confirm(`להסיר את "${req.label}" מהתיק?`)) onRemove(); }}>
+                  <DropdownMenuItem className="text-destructive" onClick={async () => { if (await confirm({ title: 'הסרת דרישה', description: `להסיר את "${req.label}" מהתיק?`, variant: 'destructive', confirmText: 'הסר' })) onRemove(); }}>
                     <X className="h-4 w-4 ml-2" /> הסר מהתיק
                   </DropdownMenuItem>
                 </DropdownMenuContent>

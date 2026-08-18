@@ -89,6 +89,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Document, TimelineEvent, Project, ProjectRequirement, Supervisor, ChatMessage } from '@/lib/types';
 import { RequirementItem } from '@/components/case/requirement-item';
 import { CaseOverview } from '@/components/case/case-overview';
@@ -118,6 +119,7 @@ export default function CasePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const { user } = useAuth();
 
   const [project, setProject] = useState<Project | null>(null);
@@ -505,7 +507,13 @@ export default function CasePage() {
 
   // Archive this case (reversible) — it leaves the active lists.
   const archiveProject = async () => {
-    if (!project || !confirm(`להעביר את "${project.projectName}" לארכיון? ניתן לשחזר בהמשך.`)) return;
+    if (!project) return;
+    const ok = await confirm({
+      title: 'העברה לארכיון',
+      description: `להעביר את "${project.projectName}" לארכיון? ניתן לשחזר בהמשך.`,
+      confirmText: 'העבר לארכיון',
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/projects/${project.id}`, {
         method: 'PATCH',
@@ -523,12 +531,14 @@ export default function CasePage() {
   // Permanently delete this case + its documents/logs. Irreversible; admin only.
   const deleteProjectPermanent = async () => {
     if (!project) return;
-    const typed = window.prompt(`מחיקה לצמיתות תמחק את התיק, המסמכים והיומן — ללא שחזור.\nלאישור, הקלד את שם התיק:\n"${project.projectName}"`);
-    if (typed == null) return;
-    if (typed.trim() !== project.projectName.trim()) {
-      toast({ title: 'השם לא תואם', description: 'המחיקה בוטלה', variant: 'destructive' });
-      return;
-    }
+    const ok = await confirm({
+      title: 'מחיקה לצמיתות',
+      description: 'פעולה זו תמחק את התיק, המסמכים והיומן — ללא אפשרות שחזור.\nלאישור, הקלד את שם התיק:',
+      requireType: project.projectName,
+      variant: 'destructive',
+      confirmText: 'מחק לצמיתות',
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/projects/${project.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('failed');
@@ -1357,7 +1367,7 @@ export default function CasePage() {
                             <button
                               className="p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-destructive"
                               title="הסר אישור מהתיק"
-                              onClick={() => { if (confirm(`להסיר את האישור "${req.label}" מהתיק?`)) removeRequirement(stage.id, req.id); }}
+                              onClick={async () => { if (await confirm({ title: 'הסרת אישור', description: `להסיר את האישור "${req.label}" מהתיק?`, variant: 'destructive', confirmText: 'הסר' })) removeRequirement(stage.id, req.id); }}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>

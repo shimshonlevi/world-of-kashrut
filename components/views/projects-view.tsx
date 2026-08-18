@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Project } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Archive, RotateCcw, Loader2 } from 'lucide-react';
@@ -30,6 +31,7 @@ export function ProjectsView({
   isAdmin,
 }: ProjectsViewProps) {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [showArchive, setShowArchive] = useState(false);
   const [archived, setArchived] = useState<Project[]>([]);
   const [loadingArchive, setLoadingArchive] = useState(false);
@@ -59,9 +61,14 @@ export function ProjectsView({
   };
 
   const purge = async (p: Project) => {
-    const typed = window.prompt(`מחיקה לצמיתות — ללא שחזור.\nהקלד את שם התיק לאישור:\n"${p.projectName}"`);
-    if (typed == null) return;
-    if (typed.trim() !== p.projectName.trim()) { toast({ title: 'השם לא תואם', variant: 'destructive' }); return; }
+    const ok = await confirm({
+      title: 'מחיקה לצמיתות',
+      description: 'פעולה זו תמחק את התיק ללא אפשרות שחזור.\nלאישור, הקלד את שם התיק:',
+      requireType: p.projectName,
+      variant: 'destructive',
+      confirmText: 'מחק לצמיתות',
+    });
+    if (!ok) return;
     setArchived((prev) => prev.filter((x) => x.id !== p.id));
     try {
       const res = await fetch(`/api/projects/${p.id}`, { method: 'DELETE' });

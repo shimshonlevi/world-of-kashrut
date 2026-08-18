@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Project, Supervisor } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,7 @@ const chips = (s?: string) =>
 
 export function SupervisorsView({ projects }: SupervisorsViewProps) {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,7 +142,7 @@ export function SupervisorsView({ projects }: SupervisorsViewProps) {
 
   const remove = async (sup: Supervisor) => {
     if (!sup.id || sup.id.startsWith('derived-')) return;
-    if (!confirm(`למחוק את המשגיח "${sup.name}"?`)) return;
+    if (!(await confirm({ title: 'מחיקת משגיח', description: `למחוק את המשגיח "${sup.name}"?`, variant: 'destructive', confirmText: 'מחק' }))) return;
     try {
       const res = await fetch(`/api/supervisors/${sup.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('מחיקה נכשלה');

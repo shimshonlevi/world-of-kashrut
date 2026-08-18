@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Project, KosherBody } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +31,7 @@ const EMPTY: Partial<KosherBody> = { name: '', contactPerson: '', phone: '', ema
 
 export function KosherBodiesView({ projects }: KosherBodiesViewProps) {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [bodies, setBodies] = useState<KosherBody[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -86,7 +88,7 @@ export function KosherBodiesView({ projects }: KosherBodiesViewProps) {
 
   const remove = async (b: KosherBody) => {
     if (!b.id || b.id.startsWith('derived-')) return;
-    if (!confirm(`למחוק את "${b.name}"?`)) return;
+    if (!(await confirm({ title: 'מחיקת גוף כשרות', description: `למחוק את "${b.name}"?`, variant: 'destructive', confirmText: 'מחק' }))) return;
     try {
       const res = await fetch(`/api/kosher-bodies/${b.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('failed');

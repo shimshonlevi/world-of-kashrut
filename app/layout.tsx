@@ -6,6 +6,7 @@ import { AuthProvider } from '@/components/auth-provider'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { CommandPalette } from '@/components/command-palette'
+import { ConfirmProvider } from '@/components/ui/confirm-dialog'
 
 // Heebo — a clean, modern Hebrew-first typeface (with Latin) for a polished RTL UI.
 const heebo = Heebo({
@@ -63,8 +64,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            {children}
-            <CommandPalette />
+            <ConfirmProvider>
+              {children}
+              <CommandPalette />
+            </ConfirmProvider>
           </AuthProvider>
         </ThemeProvider>
         <Toaster />

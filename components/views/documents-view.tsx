@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Project, StoredDocument } from '@/lib/types';
 import { DOCUMENT_CATEGORIES } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +53,7 @@ const fmtDate = (s?: string) => {
 export function DocumentsView({ projects }: DocumentsViewProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [docs, setDocs] = useState<StoredDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -114,7 +116,7 @@ export function DocumentsView({ projects }: DocumentsViewProps) {
   };
 
   const remove = async (doc: StoredDocument) => {
-    if (!confirm(`למחוק את "${doc.originalName}"?`)) return;
+    if (!(await confirm({ title: 'מחיקת מסמך', description: `למחוק את "${doc.originalName}"?`, variant: 'destructive', confirmText: 'מחק' }))) return;
     setDocs((prev) => prev.filter((d) => d.id !== doc.id)); // optimistic
     try {
       const res = await fetch(`/api/documents/${doc.id}`, { method: 'DELETE' });

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Project, StoredDocument } from '@/lib/types';
 import { DOCUMENT_CATEGORIES } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -30,6 +31,7 @@ const fmtDate = (s?: string) => {
 /** All documents uploaded to a case, pulled from the central index. */
 export function CaseDocuments({ project, reloadKey }: { project: Project; reloadKey?: number }) {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const projectId = project.id;
   const [docs, setDocs] = useState<StoredDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +94,7 @@ export function CaseDocuments({ project, reloadKey }: { project: Project; reload
   };
 
   const remove = async (doc: StoredDocument) => {
-    if (!confirm(`למחוק את "${doc.originalName}"?`)) return;
+    if (!(await confirm({ title: 'מחיקת מסמך', description: `למחוק את "${doc.originalName}"?`, variant: 'destructive', confirmText: 'מחק' }))) return;
     setDocs((prev) => prev.filter((d) => d.id !== doc.id));
     try {
       const res = await fetch(`/api/documents/${doc.id}`, { method: 'DELETE' });

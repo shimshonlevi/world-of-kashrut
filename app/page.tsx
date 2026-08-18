@@ -7,6 +7,7 @@ import { applyCorePatchToStages } from '@/lib/templates';
 import { myAwaitingReviewCount } from '@/lib/attention';
 import type { Project, FilterState } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { AppLayout } from '@/components/layout/app-layout';
 import { KPICards } from '@/components/dashboard/kpi-cards';
 import { ActionCenter } from '@/components/dashboard/action-center';
@@ -41,6 +42,7 @@ function DashboardPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const searchParams = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
@@ -201,7 +203,12 @@ function DashboardPage() {
 
   // Archive a case (reversible) — drops it from the active lists.
   const handleArchiveProject = async (project: Project) => {
-    if (!confirm(`להעביר את "${project.projectName}" לארכיון? ניתן לשחזר בהמשך.`)) return;
+    const ok = await confirm({
+      title: 'העברה לארכיון',
+      description: `להעביר את "${project.projectName}" לארכיון? ניתן לשחזר בהמשך.`,
+      confirmText: 'העבר לארכיון',
+    });
+    if (!ok) return;
     setProjects((prev) => prev.filter((p) => p.id !== project.id)); // optimistic
     try {
       const res = await fetch(`/api/projects/${project.id}`, {
@@ -219,12 +226,14 @@ function DashboardPage() {
 
   // Permanently delete a case (admin only) — requires typing the case name.
   const handleDeleteProject = async (project: Project) => {
-    const typed = window.prompt(`מחיקה לצמיתות תמחק את התיק, המסמכים והיומן — ללא שחזור.\nלאישור, הקלד את שם התיק:\n"${project.projectName}"`);
-    if (typed == null) return;
-    if (typed.trim() !== project.projectName.trim()) {
-      toast({ title: 'השם לא תואם', description: 'המחיקה בוטלה', variant: 'destructive' });
-      return;
-    }
+    const ok = await confirm({
+      title: 'מחיקה לצמיתות',
+      description: 'פעולה זו תמחק את התיק, המסמכים והיומן — ללא אפשרות שחזור.\nלאישור, הקלד את שם התיק:',
+      requireType: project.projectName,
+      variant: 'destructive',
+      confirmText: 'מחק לצמיתות',
+    });
+    if (!ok) return;
     setProjects((prev) => prev.filter((p) => p.id !== project.id)); // optimistic
     try {
       const res = await fetch(`/api/projects/${project.id}`, { method: 'DELETE' });
@@ -239,7 +248,12 @@ function DashboardPage() {
   // Archive several cases at once (single confirmation).
   const handleBulkArchive = async (list: Project[]) => {
     if (list.length === 0) return;
-    if (!confirm(`להעביר ${list.length} תיקים לארכיון? ניתן לשחזר בהמשך.`)) return;
+    const ok = await confirm({
+      title: 'העברה לארכיון',
+      description: `להעביר ${list.length} תיקים לארכיון? ניתן לשחזר בהמשך.`,
+      confirmText: 'העבר לארכיון',
+    });
+    if (!ok) return;
     const ids = new Set(list.map((p) => p.id));
     setProjects((prev) => prev.filter((p) => !ids.has(p.id))); // optimistic
     try {
