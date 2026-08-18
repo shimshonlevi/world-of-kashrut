@@ -80,6 +80,15 @@ const navItems = [
   { id: 'settings', label: 'הגדרות', icon: Settings, description: 'משתמשים, התראות וכלים', adminOnly: true },
 ];
 
+// Grouped like a real CRM console: daily work → the directory of entities →
+// setup/admin. Labels give the sidebar clear zones instead of a flat list.
+const navGroups: { label: string | null; ids: string[] }[] = [
+  { label: null, ids: ['dashboard'] },
+  { label: 'עבודה שוטפת', ids: ['projects', 'approvals', 'documents', 'trips', 'reports'] },
+  { label: 'אנשים וגופים', ids: ['clients', 'supervisors', 'kosher-bodies'] },
+  { label: 'ניהול', ids: ['templates', 'analytics', 'settings'] },
+];
+
 export function AppLayout({
   children,
   currentPage = 'dashboard',
@@ -168,42 +177,55 @@ export function AppLayout({
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 min-h-0 px-3 space-y-1 overflow-y-auto">
-        <p className="px-3 py-2 text-[11px] font-semibold text-sidebar-foreground/45 uppercase tracking-wider">
-          תפריט ראשי
-        </p>
-        {navItems.map((item) => {
-          if (item.adminOnly && user?.role !== 'admin') return null;
-          const isActive = currentPage === item.id;
+      {/* Navigation — grouped into clear zones */}
+      <nav className="flex-1 min-h-0 px-3 pb-2 overflow-y-auto">
+        {navGroups.map((group, gi) => {
+          const items = group.ids
+            .map((id) => navItems.find((n) => n.id === id))
+            .filter((n): n is (typeof navItems)[number] => !!n && (!n.adminOnly || user?.role === 'admin'));
+          if (items.length === 0) return null;
           return (
-            <TooltipProvider key={item.id} delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => handleNavClick(item.id)}
-                    className={cn(
-                      'relative flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-                    )}
-                  >
-                    {isActive && <span className="absolute right-0 h-5 w-0.5 rounded-l bg-sidebar-primary" />}
-                    <item.icon className="h-[18px] w-[18px]" />
-                    <span className="flex-1 text-right">{item.label}</span>
-                    {counts[item.id] != null && counts[item.id] > 0 && (
-                      <span className={cn('text-[11px] tabular-nums rounded px-1.5 py-0.5', isActive ? 'bg-sidebar-primary/25 text-sidebar-accent-foreground' : 'text-sidebar-foreground/45')}>
-                        {counts[item.id]}
-                      </span>
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="left" className="text-xs">
-                  {item.description}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div key={group.label ?? `g${gi}`} className={cn(gi === 0 ? 'pt-1' : 'pt-4')}>
+              {group.label && (
+                <p className="px-3 pb-1.5 text-[10.5px] font-semibold text-sidebar-foreground/40 uppercase tracking-wider">
+                  {group.label}
+                </p>
+              )}
+              <div className="space-y-0.5">
+                {items.map((item) => {
+                  const isActive = currentPage === item.id;
+                  return (
+                    <TooltipProvider key={item.id} delayDuration={0}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => handleNavClick(item.id)}
+                            className={cn(
+                              'relative flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                              isActive
+                                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                                : 'text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                            )}
+                          >
+                            {isActive && <span className="absolute right-0 h-5 w-0.5 rounded-l bg-sidebar-primary" />}
+                            <item.icon className="h-[18px] w-[18px]" />
+                            <span className="flex-1 text-right">{item.label}</span>
+                            {counts[item.id] != null && counts[item.id] > 0 && (
+                              <span className={cn('text-[11px] tabular-nums rounded px-1.5 py-0.5', isActive ? 'bg-sidebar-primary/25 text-sidebar-accent-foreground' : 'text-sidebar-foreground/45')}>
+                                {counts[item.id]}
+                              </span>
+                            )}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="text-xs">
+                          {item.description}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
       </nav>
