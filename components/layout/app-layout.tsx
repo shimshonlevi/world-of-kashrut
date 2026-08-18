@@ -31,6 +31,7 @@ import {
   Sparkles,
   Plus,
   ChevronRight,
+  ChevronDown,
   Search,
   BarChart3,
   Menu,
@@ -121,6 +122,28 @@ export function AppLayout({
     ]).then((res) => setCounts(Object.fromEntries(res.map((r) => [r.key, r.n]))));
   }, []);
 
+  // Collapsible nav groups (accordion). Persisted, and the group holding the
+  // active page is always kept open so the current item never hides.
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('wok_nav_collapsed');
+      if (saved) setCollapsedGroups(JSON.parse(saved));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const toggleGroup = (label: string) =>
+    setCollapsedGroups((prev) => {
+      const next = { ...prev, [label]: !prev[label] };
+      try {
+        localStorage.setItem('wok_nav_collapsed', JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+
   const changeOwnPassword = async () => {
     if (!user?.id || newPw.length < 3) return;
     setSavingPw(true);
@@ -184,14 +207,33 @@ export function AppLayout({
             .map((id) => navItems.find((n) => n.id === id))
             .filter((n): n is (typeof navItems)[number] => !!n && (!n.adminOnly || user?.role === 'admin'));
           if (items.length === 0) return null;
+          // A group is open unless the user collapsed it — but if it holds the
+          // active page, force it open so the current item is never hidden.
+          const holdsActive = items.some((it) => it.id === currentPage);
+          const isOpen = group.label ? !collapsedGroups[group.label] || holdsActive : true;
+          const groupCount = items.reduce((sum, it) => sum + (counts[it.id] || 0), 0);
           return (
-            <div key={group.label ?? `g${gi}`} className={cn(gi === 0 ? 'pt-1' : 'pt-4')}>
+            <div key={group.label ?? `g${gi}`} className={cn(gi === 0 ? 'pt-1' : 'pt-3')}>
               {group.label && (
-                <p className="px-3 pb-1.5 text-[10.5px] font-semibold text-sidebar-foreground/40 uppercase tracking-wider">
-                  {group.label}
-                </p>
+                <button
+                  onClick={() => toggleGroup(group.label!)}
+                  className="group/hdr flex items-center gap-1.5 w-full px-3 py-1.5 rounded-md hover:bg-sidebar-accent/50 transition-colors"
+                >
+                  <ChevronDown
+                    className={cn(
+                      'h-3.5 w-3.5 text-sidebar-foreground/40 transition-transform',
+                      !isOpen && '-rotate-90'
+                    )}
+                  />
+                  <span className="text-[10.5px] font-semibold text-sidebar-foreground/45 uppercase tracking-wider">
+                    {group.label}
+                  </span>
+                  {!isOpen && groupCount > 0 && (
+                    <span className="mr-auto text-[10.5px] tabular-nums text-sidebar-foreground/40">{groupCount}</span>
+                  )}
+                </button>
               )}
-              <div className="space-y-0.5">
+              <div className={cn('space-y-0.5 overflow-hidden transition-all', group.label && !isOpen ? 'max-h-0' : 'max-h-[600px] mt-0.5')}>
                 {items.map((item) => {
                   const isActive = currentPage === item.id;
                   return (

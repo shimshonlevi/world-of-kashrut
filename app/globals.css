@@ -32,14 +32,15 @@
   --chart-5: oklch(0.62 0.16 25);
   /* Tighter radius — office tools read as crisp, not bubbly */
   --radius: 0.5rem;
-  --sidebar: oklch(0.27 0.035 262);
-  --sidebar-foreground: oklch(0.9 0.015 260);
-  --sidebar-primary: oklch(0.62 0.15 255);
+  /* White sidebar — clean & inviting, mirrors the light content palette */
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.32 0.012 260);
+  --sidebar-primary: oklch(0.55 0.15 256);
   --sidebar-primary-foreground: oklch(0.99 0.01 250);
-  --sidebar-accent: oklch(0.34 0.04 262);
-  --sidebar-accent-foreground: oklch(0.98 0.01 260);
-  --sidebar-border: oklch(0.37 0.03 262);
-  --sidebar-ring: oklch(0.62 0.15 255);
+  --sidebar-accent: oklch(0.95 0.02 252);
+  --sidebar-accent-foreground: oklch(0.4 0.09 256);
+  --sidebar-border: oklch(0.925 0.004 260);
+  --sidebar-ring: oklch(0.55 0.15 256);
 
   /* Status colors (semantic only — accent is the blue primary) */
   --success: oklch(0.6 0.15 150);
