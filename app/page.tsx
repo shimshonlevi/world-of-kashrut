@@ -287,7 +287,7 @@ function DashboardPage() {
 
   // The redesigned dashboard "command center" body (used for admin + secretary).
   const dashboardBody = (
-    <div className="space-y-4">
+    <div className="space-y-4" dir="rtl">
       <KPICards stats={stats} onNavigate={setCurrentPage} />
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 items-start">
         <ActionCenter projects={userProjects} onOpenCase={openCase} />
@@ -332,7 +332,7 @@ function DashboardPage() {
         {/* Render different content based on current page */}
         {currentPage === 'dashboard' && (
           user?.role === 'admin' ? (
-            <Tabs value={dashTab} onValueChange={setDashTab} className="space-y-4">
+            <Tabs value={dashTab} onValueChange={setDashTab} dir="rtl" className="space-y-4">
               <DashboardHero
                 name={user?.name}
                 activeProjects={userProjects.length}

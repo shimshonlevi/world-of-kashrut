@@ -45,7 +45,7 @@ export function DashboardHero({ name, activeProjects, urgentTasks, pendingApprov
   useEffect(() => setDate(hebrewDate()), []);
 
   return (
-    <div className="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
+    <div dir="rtl" className="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <h1 className="text-lg font-semibold tracking-tight text-foreground">
           {greeting()}{name ? `, ${name}` : ''}

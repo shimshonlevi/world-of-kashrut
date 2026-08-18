@@ -134,7 +134,7 @@ export function ActionCenter({ projects, onOpenCase }: ActionCenterProps) {
             <p className="text-sm">כל הכבוד, אתה מעודכן בכל התיקים שלך</p>
           </div>
         ) : (
-          <div className="max-h-[24rem] overflow-y-auto">
+          <div>
             {GROUPS.map((g) => {
               const items = byUrgency(g.urgency);
               if (items.length === 0) return null;
