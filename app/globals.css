@@ -146,6 +146,14 @@
   html {
     font-size: 15px;
   }
+  /* Typographic rhythm: crisp, balanced headings; comfortable body wrapping. */
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  p {
+    text-wrap: pretty;
+  }
 }
 
 /* Subtle entrance animation — used on primary content for a polished feel */
