@@ -90,15 +90,19 @@ export function DocumentsView({ projects }: DocumentsViewProps) {
     });
   }, [docs, search, category, projectName]);
 
-  // Group into per-project folders (newest activity first).
+  // Group into per-project folders. Documents whose project no longer exists
+  // (e.g. the case was deleted) are bucketed together as orphans, shown last.
+  const ORPHAN = '__orphan__';
   const folders = useMemo(() => {
     const map = new Map<string, { projectId: string; items: StoredDocument[] }>();
     for (const d of filtered) {
-      if (!map.has(d.projectId)) map.set(d.projectId, { projectId: d.projectId, items: [] });
-      map.get(d.projectId)!.items.push(d);
+      const key = projectName.has(d.projectId) ? d.projectId : ORPHAN;
+      if (!map.has(key)) map.set(key, { projectId: key, items: [] });
+      map.get(key)!.items.push(d);
     }
-    return [...map.values()];
-  }, [filtered]);
+    // Real project folders first, the orphan bucket always last.
+    return [...map.values()].sort((a, b) => (a.projectId === ORPHAN ? 1 : b.projectId === ORPHAN ? -1 : 0));
+  }, [filtered, projectName]);
 
   const updateCategory = async (doc: StoredDocument, category: string) => {
     setDocs((prev) => prev.map((d) => (d.id === doc.id ? { ...d, category } : d))); // optimistic
@@ -173,26 +177,28 @@ export function DocumentsView({ projects }: DocumentsViewProps) {
       ) : (
         <div className="space-y-4">
           {folders.map(({ projectId, items }) => {
+            const isOrphan = projectId === ORPHAN;
             const proj = projectName.get(projectId);
             return (
               <Card key={projectId} className="border-border/60 elevated">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between gap-3">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${isOrphan ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>
                         <FolderOpen className="h-4 w-4" />
                       </span>
-                      {proj?.projectName || 'תיק לא ידוע'}
+                      {isOrphan ? 'מסמכים ללא תיק משויך' : proj?.projectName}
                       <Badge variant="secondary" className="text-[10px]">{items.length}</Badge>
                     </CardTitle>
-                    {proj && (
+                    {proj && !isOrphan && (
                       <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={() => router.push(`/case/${projectId}`)}>
                         <ExternalLink className="h-3.5 w-3.5" />
                         פתח תיק
                       </Button>
                     )}
                   </div>
-                  {proj && <p className="text-xs text-muted-foreground">{proj.importer} · {proj.country}</p>}
+                  {proj && !isOrphan && <p className="text-xs text-muted-foreground">{proj.importer} · {proj.country}</p>}
+                  {isOrphan && <p className="text-xs text-muted-foreground">התיק המשויך נמחק או אינו זמין. אפשר למחוק את המסמכים כאן.</p>}
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">

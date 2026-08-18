@@ -254,7 +254,7 @@ export default function CasePage() {
   const [financialForm, setFinancialForm] = useState({
     quotePrice: 0,
     actualCost: 0,
-    currency: 'USD',
+    currency: 'ILS',
     paymentStatus: 'pending',
     paymentTerms: '',
   });
@@ -851,17 +851,17 @@ export default function CasePage() {
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">הצעה:</span>
-                  <span className="font-medium">${financialForm.quotePrice.toLocaleString()}</span>
+                  <span className="font-medium">₪{financialForm.quotePrice.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">עלות בפועל:</span>
-                  <span className="font-medium">${financialForm.actualCost.toLocaleString()}</span>
+                  <span className="font-medium">₪{financialForm.actualCost.toLocaleString()}</span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">רווח:</span>
                   <span className={`font-bold ${financialForm.quotePrice - financialForm.actualCost > 0 ? 'text-emerald-600' : 'text-destructive'}`}>
-                    ${(financialForm.quotePrice - financialForm.actualCost).toLocaleString()}
+                    ₪{(financialForm.quotePrice - financialForm.actualCost).toLocaleString()}
                   </span>
                 </div>
                 <Badge 
