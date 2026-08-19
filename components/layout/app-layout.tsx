@@ -201,7 +201,7 @@ export function AppLayout({
       </div>
 
       {/* Navigation — grouped into clear zones */}
-      <nav className="flex-1 min-h-0 px-3 pb-2 overflow-y-auto">
+      <nav className="flex-1 min-h-0 px-3 pb-2 overflow-y-auto no-scrollbar">
         {navGroups.map((group, gi) => {
           const items = group.ids
             .map((id) => navItems.find((n) => n.id === id))

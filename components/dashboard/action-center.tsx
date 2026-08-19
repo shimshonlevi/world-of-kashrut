@@ -96,6 +96,7 @@ function buildActions(projects: Project[]): ActionItem[] {
 interface ActionCenterProps {
   projects: Project[];
   onOpenCase: (projectId: string) => void;
+  className?: string;
 }
 
 const GROUPS: { urgency: Urgency; label: string; stripe: string }[] = [
@@ -104,20 +105,20 @@ const GROUPS: { urgency: Urgency; label: string; stripe: string }[] = [
   { urgency: 'low', label: 'ממתין', stripe: 'border-r-primary' },
 ];
 
-export function ActionCenter({ projects, onOpenCase }: ActionCenterProps) {
+export function ActionCenter({ projects, onOpenCase, className }: ActionCenterProps) {
   const actions = useMemo(() => buildActions(projects), [projects]);
   const highCount = actions.filter((a) => a.urgency === 'high').length;
   const byUrgency = (u: Urgency) => actions.filter((a) => a.urgency === u);
 
   return (
-    <Card className="border-border/60 elevated overflow-hidden">
-      <CardHeader className="pb-3">
+    <Card className={cn('border-border/60 elevated overflow-hidden flex flex-col', className)}>
+      <CardHeader className="pb-3 shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <ListChecks className="h-4 w-4" />
             </span>
-            מה דורש ממך טיפול עכשיו
+            מה דורש טיפול עכשיו
           </CardTitle>
           {actions.length > 0 && (
             <Badge variant="outline" className={cn(highCount > 0 && 'border-rose-200 text-rose-600 bg-rose-50')}>
@@ -126,7 +127,7 @@ export function ActionCenter({ projects, onOpenCase }: ActionCenterProps) {
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0 flex-1 min-h-0 overflow-y-auto no-scrollbar">
         {actions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
             <CheckCircle2 className="h-9 w-9 text-emerald-500 mb-2" />

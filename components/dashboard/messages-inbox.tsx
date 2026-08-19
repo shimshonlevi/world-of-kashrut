@@ -12,6 +12,7 @@ interface MessagesInboxProps {
   projects: Project[];
   limit?: number;
   onOpenAll?: () => void;
+  className?: string;
 }
 
 // Chat message ids are minted as `m-<epoch>` — recover the time for sorting.
@@ -34,7 +35,7 @@ const timeAgo = (epoch: number) => {
 };
 
 /** Recent conversations across all cases — who wrote, in which case. */
-export function MessagesInbox({ projects, limit = 6, onOpenAll }: MessagesInboxProps) {
+export function MessagesInbox({ projects, limit = 6, onOpenAll, className }: MessagesInboxProps) {
   const router = useRouter();
 
   const messages = useMemo(() => {
@@ -47,8 +48,8 @@ export function MessagesInbox({ projects, limit = 6, onOpenAll }: MessagesInboxP
   }, [projects, limit]);
 
   return (
-    <Card className="border-border/60 elevated overflow-hidden">
-      <CardHeader className="pb-2">
+    <Card className={cn('border-border/60 elevated overflow-hidden flex flex-col', className)}>
+      <CardHeader className="pb-2 shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600">
@@ -64,7 +65,7 @@ export function MessagesInbox({ projects, limit = 6, onOpenAll }: MessagesInboxP
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0 flex-1 min-h-0 overflow-y-auto no-scrollbar">
         {messages.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">אין הודעות עדיין.</p>
         ) : (
