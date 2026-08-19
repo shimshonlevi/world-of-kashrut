@@ -23,7 +23,7 @@ type Dir = 'in' | 'out' | 'note';
 interface NormMsg { id: string; sender: string; body: string; at: number; dir: Dir; caseId?: string | null; via?: string }
 interface Thread {
   id: string; kind: 'case' | 'team'; title: string; subtitle?: string;
-  caseId?: string; messages: NormMsg[]; lastAt: number; lastPreview: string;
+  caseId?: string; partnerId?: string; messages: NormMsg[]; lastAt: number; lastPreview: string;
 }
 
 const TEAM_ID = 'team-all';
@@ -58,6 +58,7 @@ interface CommunicationViewProps {
 export function CommunicationView({ projects, userId, userName, onUpdateProject, onOpenCase }: CommunicationViewProps) {
   const { toast } = useToast();
   const [team, setTeam] = useState<TeamMessage[]>([]);
+  const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
   const [tab, setTab] = useState<'all' | 'case' | 'team'>('all');
   const [activeId, setActiveId] = useState<string>(TEAM_ID);
   const [search, setSearch] = useState('');
@@ -67,7 +68,10 @@ export function CommunicationView({ projects, userId, userName, onUpdateProject,
   const bodyRef = useRef<HTMLDivElement>(null);
 
   const loadTeam = () => fetch('/api/messages').then((r) => r.json()).then((d) => setTeam(d.messages || [])).catch(() => {});
-  useEffect(() => { loadTeam(); }, []);
+  useEffect(() => {
+    loadTeam();
+    fetch('/api/users/names').then((r) => r.json()).then((d) => setUsers(d.users || [])).catch(() => {});
+  }, []);
 
   const projName = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
 
@@ -90,16 +94,20 @@ export function CommunicationView({ projects, userId, userName, onUpdateProject,
         lastPreview: last ? last.body : 'אין הודעות עדיין',
       });
     }
-    const teamNorm: NormMsg[] = team
-      .map((m) => ({ id: m.id, sender: m.fromName, body: m.body, at: new Date(m.createdAt).getTime(), dir: (m.fromUserId === userId ? 'out' : 'in') as Dir, caseId: m.caseId }))
-      .sort((a, b) => a.at - b.at);
-    const lastTeam = teamNorm[teamNorm.length - 1];
-    out.push({
-      id: TEAM_ID, kind: 'team', title: 'כל הצוות', subtitle: 'צ׳אט משרדי פנימי',
-      messages: teamNorm, lastAt: lastTeam?.at ?? 0, lastPreview: lastTeam ? lastTeam.body : 'התחילו שיחת צוות',
-    });
+    const normTeam = (m: TeamMessage): NormMsg => ({ id: m.id, sender: m.fromName, body: m.body, at: new Date(m.createdAt).getTime(), dir: (m.fromUserId === userId ? 'out' : 'in') as Dir, caseId: m.caseId });
+    // Office-wide broadcast feed
+    const bc = team.filter((m) => !m.toUserId).map(normTeam).sort((a, b) => a.at - b.at);
+    const lastBc = bc[bc.length - 1];
+    out.push({ id: TEAM_ID, kind: 'team', title: 'כל הצוות', subtitle: 'צ׳אט משרדי פנימי', messages: bc, lastAt: lastBc?.at ?? 0, lastPreview: lastBc ? lastBc.body : 'התחילו שיחת צוות' });
+    // A direct thread per teammate (so you can DM anyone, even with no history)
+    for (const u of users) {
+      if (u.id === userId) continue;
+      const dm = team.filter((m) => (m.fromUserId === userId && m.toUserId === u.id) || (m.fromUserId === u.id && m.toUserId === userId)).map(normTeam).sort((a, b) => a.at - b.at);
+      const last = dm[dm.length - 1];
+      out.push({ id: `team-dm-${u.id}`, kind: 'team', title: u.name, subtitle: 'צ׳אט אישי', partnerId: u.id, messages: dm, lastAt: last?.at ?? 0, lastPreview: last ? last.body : 'אין הודעות עדיין' });
+    }
     return out.sort((a, b) => b.lastAt - a.lastAt);
-  }, [projects, team, userId]);
+  }, [projects, team, users, userId]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -123,7 +131,7 @@ export function CommunicationView({ projects, userId, userName, onUpdateProject,
       if (active.kind === 'team') {
         const res = await fetch('/api/messages', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ body: text, caseId: linkCaseId }),
+          body: JSON.stringify({ body: text, caseId: linkCaseId, toUserId: active.partnerId ?? null, toName: active.partnerId ? active.title : null }),
         });
         if (!res.ok) throw new Error('failed');
         await loadTeam();
@@ -179,8 +187,8 @@ export function CommunicationView({ projects, userId, userName, onUpdateProject,
               return (
                 <button key={t.id} onClick={() => setActiveId(t.id)}
                   className={cn('w-full flex items-start gap-2.5 px-3 py-2.5 text-right border-b border-border/60 transition-colors', isActive ? 'bg-primary/5' : 'hover:bg-muted/50')}>
-                  <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm', t.kind === 'team' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground')}>
-                    {t.kind === 'team' ? <Users className="h-4 w-4" /> : <FolderOpen className="h-4 w-4" />}
+                  <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold', t.kind === 'case' ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary')}>
+                    {t.kind === 'case' ? <FolderOpen className="h-4 w-4" /> : t.partnerId ? t.title.charAt(0) : <Users className="h-4 w-4" />}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center justify-between gap-2">
@@ -203,7 +211,7 @@ export function CommunicationView({ projects, userId, userName, onUpdateProject,
           <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border/60 shrink-0">
             <div className="min-w-0">
               <div className="flex items-center gap-2 font-semibold truncate">
-                {active.kind === 'team' ? <Users className="h-4 w-4 text-primary" /> : <FolderOpen className="h-4 w-4 text-muted-foreground" />}
+                {active.kind === 'case' ? <FolderOpen className="h-4 w-4 text-muted-foreground" /> : active.partnerId ? <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary text-[11px]">{active.title.charAt(0)}</span> : <Users className="h-4 w-4 text-primary" />}
                 {active.title}
               </div>
               {active.subtitle && <p className="text-xs text-muted-foreground truncate">{active.subtitle}</p>}
@@ -279,7 +287,7 @@ export function CommunicationView({ projects, userId, userName, onUpdateProject,
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-                placeholder={active.kind === 'team' ? 'הודעה לצוות…  (@ לתיוג · 🔗 לשיוך תיק)' : 'כתוב הודעה לתיק…'}
+                placeholder={active.kind === 'case' ? 'כתוב הודעה לתיק…' : active.partnerId ? `הודעה ל${active.title}…` : 'הודעה לצוות…  (@ לתיוג · 🔗 לשיוך תיק)'}
                 className="flex-1 h-10"
               />
               <Button onClick={send} disabled={!draft.trim() || sending} className="gap-1.5 h-10">
