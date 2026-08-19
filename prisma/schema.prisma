@@ -173,3 +173,22 @@ model Document {
   @@index([fileName])
   @@index([category])
 }
+
+// Internal office/team messaging for the Communication hub. External per-case
+// chat stays in Project.chatHistory; these are office-to-office notes, each
+// optionally linked to a case (caseId) so a question/instruction keeps context.
+model Message {
+  id         String   @id @default(cuid())
+  body       String
+  fromUserId String
+  fromName   String // sender name snapshot
+  toUserId   String? // null = broadcast to the whole office
+  toName     String?
+  caseId     String? // optional link to a Project
+  readBy     String   @default("[]") // JSON array of userIds who've read it
+  createdAt  DateTime @default(now())
+
+  @@index([caseId])
+  @@index([toUserId])
+  @@index([createdAt])
+}

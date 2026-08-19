@@ -38,6 +38,7 @@ import {
   X,
   Clock,
   AlertTriangle,
+  MessageSquare,
   Layers,
   Plane,
   ShieldCheck,
@@ -74,6 +75,7 @@ const navItems = [
   { id: 'kosher-bodies', label: 'גופי כשרות', icon: Award, description: 'ניהול גופי הכשרות' },
   { id: 'trips', label: 'נסיעות', icon: Plane, description: 'לוגיסטיקה וטיסות' },
   { id: 'approvals', label: 'אישורים', icon: BadgeCheck, description: 'אישורי מסמכים וגורמים' },
+  { id: 'messages', label: 'הודעות', icon: MessageSquare, description: 'מרכז תקשורת — שיחות תיקים וצוות' },
   { id: 'documents', label: 'מסמכים', icon: Files, description: 'כל המסמכים לפי תיקים' },
   { id: 'reports', label: 'דוחות', icon: FileText, description: 'דוחות ומסמכים' },
   { id: 'templates', label: 'תבניות', icon: Layers, description: 'ניהול תבניות תהליך', adminOnly: true },
@@ -85,7 +87,7 @@ const navItems = [
 // setup/admin. Labels give the sidebar clear zones instead of a flat list.
 const navGroups: { label: string | null; ids: string[] }[] = [
   { label: null, ids: ['dashboard'] },
-  { label: 'עבודה שוטפת', ids: ['projects', 'approvals', 'documents', 'trips', 'reports'] },
+  { label: 'עבודה שוטפת', ids: ['projects', 'approvals', 'messages', 'documents', 'trips', 'reports'] },
   { label: 'אנשים וגופים', ids: ['clients', 'supervisors', 'kosher-bodies'] },
   { label: 'ניהול', ids: ['templates', 'analytics', 'settings'] },
 ];

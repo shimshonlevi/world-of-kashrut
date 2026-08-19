@@ -31,6 +31,7 @@ import { SupervisorsView } from '@/components/views/supervisors-view';
 import { KosherBodiesView } from '@/components/views/kosher-bodies-view';
 import { ApprovalsView } from '@/components/views/approvals-view';
 import { DocumentsView } from '@/components/views/documents-view';
+import { CommunicationView } from '@/components/views/communication-view';
 import { ProjectsView } from '@/components/views/projects-view';
 import { TemplatesView } from '@/components/views/templates-view';
 import { SettingsView } from '@/components/views/settings-view';
@@ -293,7 +294,7 @@ function DashboardPage() {
         <ActionCenter projects={userProjects} onOpenCase={openCase} className="lg:h-full" />
         <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
           <ApprovalsPreview projects={projects} userName={user?.name} onOpenAll={() => setCurrentPage('approvals')} onOpenCase={openCase} />
-          <MessagesInbox projects={userProjects} limit={3} onOpenAll={() => setCurrentPage('projects')} className="lg:flex-1 lg:min-h-0" />
+          <MessagesInbox projects={userProjects} limit={3} onOpenAll={() => setCurrentPage('messages')} className="lg:flex-1 lg:min-h-0" />
         </div>
       </div>
       <RecentCasesTable projects={userProjects} onOpenCase={openCase} onOpenAll={() => setCurrentPage('projects')} />
@@ -412,6 +413,16 @@ function DashboardPage() {
 
         {currentPage === 'documents' && (
           <DocumentsView projects={userProjects} />
+        )}
+
+        {currentPage === 'messages' && (
+          <CommunicationView
+            projects={userProjects}
+            userId={user?.id}
+            userName={user?.name}
+            onUpdateProject={handleUpdateProject}
+            onOpenCase={openCase}
+          />
         )}
 
         {currentPage === 'reports' && (
